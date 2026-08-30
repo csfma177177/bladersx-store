@@ -55,7 +55,12 @@ and webhook logs are checked.
 
 ## 4. Vercel
 
-Import the GitHub repository into Vercel and set the project root to `store-demo`.
+Import the GitHub repository into Vercel and keep the project root as the
+repository root (`.`).
+
+Only set the project root to `store-demo` if this project is nested inside a
+larger monorepo. If the GitHub repo already contains `package.json`, `app/`, and
+`public/` at the top level, leave Root Directory blank.
 
 Vercel will use `vercel.json`, which runs:
 
