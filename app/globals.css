@@ -1,0 +1,18 @@
+* { box-sizing: border-box; }
+
+html, body, .demo-shell {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  background: #070913;
+}
+
+.demo-shell { height: 100vh; }
+
+.demo-frame {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+  background: #070913;
+}

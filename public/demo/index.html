@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="BLADERS X LIVE TOURNAMENT HUB — Official Member utility T-shirt e-commerce demonstration."
+    />
+    <meta name="theme-color" content="#070913" />
+    <title>BLADERS X — Member Utility System</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <div class="noise" aria-hidden="true"></div>
+    <div class="announcement">
+      <span>DROP 001</span>
+      <span class="announcement__track">OFFICIAL MEMBER UTILITY SYSTEM — HONG KONG — STRIPE SECURE CHECKOUT</span>
+      <span>LIMITED RUN</span>
+    </div>
+
+    <header class="site-header" id="top">
+      <a class="brand" href="#top" aria-label="BLADERS X 首頁">
+        <img src="/assets/bladers-x-live-logo.png" alt="BLADERS X Live Tournament Hub" />
+      </a>
+      <nav class="desktop-nav" aria-label="主要選單">
+        <a href="#drop">DROP 001</a>
+        <a href="#system">UTILITY SYSTEM</a>
+        <a href="#culture">FIELD NOTES</a>
+      </nav>
+      <button class="cart-trigger" type="button" data-open-cart aria-label="開啟購物袋">
+        BAG <span data-cart-count>0</span>
+      </button>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero__grid" aria-hidden="true"></div>
+        <div class="hero__ghost" aria-hidden="true">BX</div>
+        <div class="hero__copy">
+          <p class="eyebrow"><span></span> TOURNAMENT FIELD EQUIPMENT / 001</p>
+          <h1 id="hero-title">
+            STREET BUILT.<br />
+            <em>STADIUM</em> READY.
+          </h1>
+          <p class="hero__lead">
+            為 Blader 而設嘅會員機能 T-shirt。將比賽裝備由袋入面帶到身上，
+            隨時準備下一場對戰。
+          </p>
+          <div class="hero__actions">
+            <a class="button button--primary" href="#drop">SHOP THE DROP <span>↘</span></a>
+            <a class="button button--ghost" href="#system">EXPLORE THE SYSTEM</a>
+          </div>
+          <div class="hero__metrics" aria-label="產品重點">
+            <div><strong>03</strong><span>BEYBLADE<br />SLOTS</span></div>
+            <div><strong>02</strong><span>LAUNCHER<br />BAYS</span></div>
+            <div><strong>02</strong><span>MEMBER<br />COLOURWAYS</span></div>
+          </div>
+        </div>
+
+        <div class="hero__stage" aria-label="黑色及深藍色會員 T-shirt">
+          <article class="hero-card hero-card--back">
+            <div class="hero-card__label"><span>COLOUR / 02</span><strong>FIELD NAVY</strong></div>
+            <img src="/assets/member-navy-front.png" alt="深藍色 BLADERS X 會員機能 T-shirt" />
+          </article>
+          <article class="hero-card hero-card--front">
+            <div class="hero-card__label"><span>COLOUR / 01</span><strong>TACTICAL BLACK</strong></div>
+            <img src="/assets/member-black-front.png" alt="黑色 BLADERS X 會員機能 T-shirt" />
+          </article>
+          <div class="hero__crosshair" aria-hidden="true"><i></i><i></i></div>
+        </div>
+
+        <div class="hero__rail" aria-hidden="true">
+          <span>BX-LTH / MEMBER DIVISION</span>
+          <b>HK — 22.3193° N</b>
+        </div>
+      </section>
+
+      <div class="ticker" aria-hidden="true">
+        <div>
+          <span>FIELD-READY</span><i>✦</i><span>MODULAR STORAGE</span><i>✦</i><span>OFFICIAL MEMBER</span><i>✦</i>
+          <span>FIELD-READY</span><i>✦</i><span>MODULAR STORAGE</span><i>✦</i><span>OFFICIAL MEMBER</span><i>✦</i>
+        </div>
+      </div>
+
+      <section class="drop-section" id="drop" aria-labelledby="drop-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow"><span></span> MEMBERS ONLY / RELEASE 001</p>
+            <h2 id="drop-title">THE UTILITY<br /><em>MEMBER TEE.</em></h2>
+          </div>
+          <p>
+            低調會員識別、比賽裝備收納，同一件衫完成。揀你嘅 field colour，
+            再揀尺碼加入裝備袋。
+          </p>
+        </div>
+
+        <div class="product-grid">
+          <article class="product-card" data-product="black">
+            <div class="product-card__visual">
+              <div class="product-card__meta"><span>BX-MUT / 01</span><span>TACTICAL BLACK</span></div>
+              <img
+                data-main-image
+                src="/assets/member-black-front.png"
+                alt="黑色會員機能 T-shirt 正面"
+              />
+              <div class="view-tabs" role="group" aria-label="黑色產品圖片選擇">
+                <button class="is-active" type="button" data-view="front">FRONT</button>
+                <button type="button" data-view="back">BACK</button>
+                <button type="button" data-view="detail">SYSTEM</button>
+              </div>
+              <span class="image-index">01 / 03</span>
+            </div>
+            <div class="product-card__body">
+              <div class="product-card__title">
+                <div><p>OFFICIAL MEMBER SERIES</p><h3>UTILITY TEE — BLACK</h3></div>
+                <strong>HK$498 <small>示範價</small></strong>
+              </div>
+              <p class="product-card__description">
+                黑色重磅短袖上衣配沙色模組袋組；三個陀螺位、兩個發射器位，
+                背面配大型 OFFICIAL MEMBER 圖案。
+              </p>
+              <div class="purchase-row">
+                <label>SIZE
+                  <select data-size aria-label="選擇黑色 T-shirt 尺碼">
+                    <option value="">SELECT</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>2XL</option>
+                  </select>
+                </label>
+                <button class="add-button" type="button" data-add-to-cart>ADD TO BAG <span>＋</span></button>
+              </div>
+            </div>
+          </article>
+
+          <article class="product-card" data-product="navy">
+            <div class="product-card__visual product-card__visual--navy">
+              <div class="product-card__meta"><span>BX-MUT / 02</span><span>FIELD NAVY</span></div>
+              <img
+                data-main-image
+                src="/assets/member-navy-front.png"
+                alt="深藍色會員機能 T-shirt 正面"
+              />
+              <div class="view-tabs" role="group" aria-label="深藍色產品圖片選擇">
+                <button class="is-active" type="button" data-view="front">FRONT</button>
+                <button type="button" data-view="back">BACK</button>
+                <button type="button" data-view="detail">SYSTEM</button>
+              </div>
+              <span class="image-index">01 / 03</span>
+            </div>
+            <div class="product-card__body">
+              <div class="product-card__title">
+                <div><p>OFFICIAL MEMBER SERIES</p><h3>UTILITY TEE — NAVY</h3></div>
+                <strong>HK$498 <small>示範價</small></strong>
+              </div>
+              <p class="product-card__description">
+                深藍色重磅短袖上衣配黑色模組袋組；同色系呈現更低調嘅 field-ready
+                機能造型。
+              </p>
+              <div class="purchase-row">
+                <label>SIZE
+                  <select data-size aria-label="選擇深藍色 T-shirt 尺碼">
+                    <option value="">SELECT</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>2XL</option>
+                  </select>
+                </label>
+                <button class="add-button" type="button" data-add-to-cart>ADD TO BAG <span>＋</span></button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="system-section" id="system" aria-labelledby="system-title">
+        <div class="system-section__intro">
+          <p class="eyebrow"><span></span> CARRY CONFIGURATION</p>
+          <h2 id="system-title">YOUR LOADOUT.<br /><em>ON BODY.</em></h2>
+          <p>
+            由候賽區行入對戰場，常用裝備唔使再喺袋底搵。袋組按陀螺同發射器
+            比例設計，掀開、取出、準備發射。
+          </p>
+        </div>
+        <div class="system-visual">
+          <img src="/assets/member-black-detail.png" alt="黑色會員 T-shirt 模組收納系統近鏡" />
+          <div class="callout callout--one"><b>01</b><span>3 × TOP STORAGE<br />QUICK ACCESS</span></div>
+          <div class="callout callout--two"><b>02</b><span>2 × LAUNCHER BAYS<br />SECURE CARRY</span></div>
+          <div class="system-stamp"><span>TESTED</span><strong>5-SLOT</strong><small>TOURNAMENT LOADOUT</small></div>
+        </div>
+        <div class="spec-grid">
+          <article><span>01 / MATERIAL</span><h3>HEAVYWEIGHT<br />COTTON BODY</h3><p>保持街頭輪廓，同時承托模組袋組。</p></article>
+          <article><span>02 / ACCESS</span><h3>SNAP-FLAP<br />MODULES</h3><p>金屬啪鈕袋蓋，快速打開亦可以固定裝備。</p></article>
+          <article><span>03 / IDENTITY</span><h3>MEMBER<br />BACK MARK</h3><p>大型背印作為場內會員識別，正面保持低調。</p></article>
+        </div>
+      </section>
+
+      <section class="culture-section" id="culture" aria-labelledby="culture-title">
+        <div class="culture-section__code">BX / LIVE<br />TOURNAMENT<br />HUB</div>
+        <div>
+          <p class="eyebrow"><span></span> BUILT AROUND THE COMMUNITY</p>
+          <h2 id="culture-title">NOT MERCH.<br /><em>FIELD EQUIPMENT.</em></h2>
+          <p>
+            呢件唔係普通 Logo Tee。佢由真正比賽流程演化而成，將 Blader 身份、
+            裝備攜帶同街頭服飾語言放喺同一件產品入面。
+          </p>
+          <a class="text-link" href="#drop">SELECT YOUR FIELD COLOUR <span>→</span></a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <img src="/assets/bladers-x-live-logo.png" alt="BLADERS X Live Tournament Hub" />
+      <div><span>BLADERS X LIVE TOURNAMENT HUB</span><span>HONG KONG / EST. 2026</span></div>
+      <p>DEMONSTRATION STORE · PRICES AND INVENTORY ARE PLACEHOLDERS</p>
+    </footer>
+
+    <div class="drawer-overlay" data-drawer-overlay></div>
+    <aside class="cart-drawer" data-cart-drawer aria-hidden="true" aria-labelledby="cart-title">
+      <header>
+        <div><p>FIELD BAG</p><h2 id="cart-title">YOUR LOADOUT</h2></div>
+        <button type="button" data-close-cart aria-label="關閉購物袋">×</button>
+      </header>
+      <div class="cart-drawer__items" data-cart-items>
+        <div class="empty-bag"><span>00</span><h3>YOUR BAG IS EMPTY</h3><p>揀顏色同尺碼，建立你嘅比賽 loadout。</p></div>
+      </div>
+      <div class="cart-drawer__summary">
+        <div><span>SUBTOTAL</span><strong data-cart-total>HK$0</strong></div>
+        <p>Shipping and final total calculated securely at checkout.</p>
+        <button class="checkout-button" type="button" data-checkout>
+          <span>STRIPE SECURE CHECKOUT</span><b>→</b>
+        </button>
+        <small>DEMO MODE · NO REAL CHARGE WILL BE MADE</small>
+      </div>
+    </aside>
+
+    <div class="modal-overlay" data-modal-overlay></div>
+    <section class="demo-modal" data-demo-modal role="dialog" aria-modal="true" aria-labelledby="demo-modal-title">
+      <button type="button" class="demo-modal__close" data-close-modal aria-label="關閉">×</button>
+      <span class="demo-modal__icon">S</span>
+      <p>STRIPE INTEGRATION</p>
+      <h2 id="demo-modal-title">CHECKOUT<br />DEMO READY.</h2>
+      <p class="demo-modal__copy">
+        購物袋、商品資料同 Stripe Checkout 請求已經接好。加入 Stripe 測試金鑰同兩個 Price ID 後，
+        呢個按鈕就會跳去 Stripe 託管付款頁面。
+      </p>
+      <button type="button" class="button button--primary" data-close-modal>BACK TO STORE</button>
+    </section>
+
+    <div class="toast" data-toast role="status" aria-live="polite"></div>
+  </body>
+</html>
