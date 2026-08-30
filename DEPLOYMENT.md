@@ -1,6 +1,6 @@
 # BLADERS X Store Deployment
 
-This demo is ready to move into a GitHub -> Vercel -> Supabase workflow.
+This storefront is ready to move into a GitHub -> Vercel -> Supabase workflow.
 
 ## Architecture
 
@@ -44,14 +44,14 @@ Create two Stripe Products and Prices:
 Use these Vercel environment variables:
 
 ```env
-STRIPE_SECRET_KEY=sk_test_or_live_from_stripe_dashboard
+STRIPE_SECRET_KEY=rotated_stripe_secret_key_from_dashboard
 STRIPE_PRICE_BLACK=price_for_black_tee
 STRIPE_PRICE_NAVY=price_for_navy_tee
 STRIPE_WEBHOOK_SECRET=whsec_from_stripe_webhook
 ```
 
-Start in test mode. Switch to live mode only when product prices, delivery flow,
-and webhook logs are checked.
+For production, use live Stripe products, live Price IDs, and a rotated live
+secret key that has never been pasted into chat or committed to Git.
 
 ## 4. Vercel
 

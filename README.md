@@ -1,11 +1,11 @@
 # BLADERS X Member Utility Store
 
-Street-culture e-commerce demo for BLADERS X LIVE TOURNAMENT HUB member utility
-T-shirts.
+Street-culture e-commerce storefront for BLADERS X LIVE TOURNAMENT HUB member
+utility T-shirts.
 
 ## Local Preview
 
-The static preview is available at:
+The local static preview is available at:
 
 ```text
 http://localhost:4173/demo/
@@ -13,7 +13,7 @@ http://localhost:4173/demo/
 
 ## Production Direction
 
-This project can be deployed with GitHub, Vercel, Supabase, and Stripe Checkout.
+This project is prepared for GitHub, Vercel, Supabase, and Stripe Checkout.
 See `DEPLOYMENT.md` for the setup checklist.
 
 ## Environment Variables

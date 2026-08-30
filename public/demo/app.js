@@ -224,7 +224,7 @@ const params = new URLSearchParams(window.location.search);
 if (params.get("checkout") === "success") {
   state.cart = [];
   persistCart();
-  setTimeout(() => showToast("付款測試完成 / ORDER CONFIRMED"), 350);
+  setTimeout(() => showToast("付款完成 / ORDER CONFIRMED"), 350);
 }
 
 renderCart();

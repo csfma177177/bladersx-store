@@ -28,7 +28,7 @@ async function createCheckoutSession(request: Request, env: Env): Promise<Respon
 
   if (!env.STRIPE_SECRET_KEY || !env.STRIPE_PRICE_BLACK || !env.STRIPE_PRICE_NAVY) {
     return new Response(
-      JSON.stringify({ error: "Stripe test mode is not configured yet." }),
+      JSON.stringify({ error: "Stripe is not configured yet." }),
       { status: 503, headers },
     );
   }
@@ -64,8 +64,8 @@ async function createCheckoutSession(request: Request, env: Env): Promise<Respon
   }
 
   params.append("mode", "payment");
-  params.append("success_url", `${origin}/demo/?checkout=success&session_id={CHECKOUT_SESSION_ID}`);
-  params.append("cancel_url", `${origin}/demo/?checkout=cancelled`);
+  params.append("success_url", `${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`);
+  params.append("cancel_url", `${origin}/?checkout=cancelled`);
   params.append("client_reference_id", `bx-${crypto.randomUUID()}`);
   params.append("billing_address_collection", "auto");
   params.append("phone_number_collection[enabled]", "true");

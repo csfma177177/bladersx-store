@@ -87,8 +87,8 @@ export async function POST(request: Request) {
   });
 
   params.append("mode", "payment");
-  params.append("success_url", `${origin}/demo/?checkout=success&session_id={CHECKOUT_SESSION_ID}`);
-  params.append("cancel_url", `${origin}/demo/?checkout=cancelled`);
+  params.append("success_url", `${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`);
+  params.append("cancel_url", `${origin}/?checkout=cancelled`);
   params.append("client_reference_id", clientReferenceId);
   params.append("billing_address_collection", "auto");
   params.append("phone_number_collection[enabled]", "true");
