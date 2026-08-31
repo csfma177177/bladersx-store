@@ -1,3 +1,5 @@
+import { loadInventorySnapshot } from "@/lib/supabase-admin";
+
 type CheckoutItem = {
   sku: "BX-MUT-01" | "BX-MUT-02";
   size: string;
@@ -59,6 +61,29 @@ async function createSupabaseOrder(record: Record<string, unknown>) {
   }
 }
 
+async function validateInventory(items: CheckoutItem[]) {
+  const snapshot = await loadInventorySnapshot(
+    items
+      .filter((item): item is CheckoutItem & { size: "S" | "M" | "L" | "XL" | "2XL" } => allowedSizes.has(item.size))
+      .map((item) => ({
+        sku: item.sku,
+        size: item.size as "S" | "M" | "L" | "XL" | "2XL",
+        quantity: item.quantity,
+      })),
+  );
+
+  if (!snapshot) return null;
+
+  const unavailable = items.find((item) => {
+    const variant = snapshot.find((entry) => entry.sku === item.sku && entry.size === item.size);
+    return !variant || !variant.active || variant.stock_quantity < item.quantity;
+  });
+
+  return unavailable
+    ? `${catalogue[unavailable.sku].name} / ${unavailable.size} 暫時缺貨，請更新購物車後再試。`
+    : null;
+}
+
 export async function POST(request: Request) {
   if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRICE_BLACK || !process.env.STRIPE_PRICE_NAVY) {
     return json({ error: "Stripe is not configured yet." }, 503);
@@ -74,6 +99,9 @@ export async function POST(request: Request) {
   const items = normaliseItems(payload.items);
   if (!items) return json({ error: "A valid cart is required." }, 400);
 
+  const inventoryError = await validateInventory(items);
+  if (inventoryError) return json({ error: inventoryError }, 409);
+
   const params = new URLSearchParams();
   const origin = new URL(request.url).origin;
   const clientReferenceId = `bx-${crypto.randomUUID()}`;
@@ -84,6 +112,7 @@ export async function POST(request: Request) {
     params.append(`line_items[${index}][quantity]`, String(item.quantity));
     params.append(`metadata[item_${index}_sku]`, item.sku);
     params.append(`metadata[item_${index}_size]`, item.size);
+    params.append(`metadata[item_${index}_quantity]`, String(item.quantity));
   });
 
   params.append("mode", "payment");

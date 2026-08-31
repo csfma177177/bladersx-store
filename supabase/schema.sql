@@ -6,7 +6,8 @@ create table if not exists public.products (
   colour text not null,
   price_hkd integer not null,
   active boolean not null default true,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 insert into public.products (sku, name, colour, price_hkd)
@@ -29,6 +30,8 @@ create table if not exists public.orders (
   customer_email text,
   customer_name text,
   customer_phone text,
+  fulfillment_status text not null default 'pending',
+  admin_notes text,
   items jsonb not null default '[]'::jsonb,
   checkout_url text,
   paid_at timestamptz,
@@ -36,8 +39,25 @@ create table if not exists public.orders (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.product_variants (
+  sku text not null references public.products (sku) on delete cascade,
+  size text not null check (size in ('S', 'M', 'L', 'XL', '2XL')),
+  stock_quantity integer not null default 0 check (stock_quantity >= 0),
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (sku, size)
+);
+
+insert into public.product_variants (sku, size, stock_quantity, active)
+select products.sku, sizes.size, 0, true
+from public.products as products
+cross join (values ('S'), ('M'), ('L'), ('XL'), ('2XL')) as sizes(size)
+on conflict (sku, size) do nothing;
+
 create index if not exists orders_status_idx on public.orders (status);
 create index if not exists orders_created_at_idx on public.orders (created_at desc);
+create index if not exists product_variants_sku_idx on public.product_variants (sku);
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -55,8 +75,44 @@ before update on public.orders
 for each row
 execute function public.set_updated_at();
 
+drop trigger if exists set_products_updated_at on public.products;
+create trigger set_products_updated_at
+before update on public.products
+for each row
+execute function public.set_updated_at();
+
+drop trigger if exists set_product_variants_updated_at on public.product_variants;
+create trigger set_product_variants_updated_at
+before update on public.product_variants
+for each row
+execute function public.set_updated_at();
+
 alter table public.products enable row level security;
+alter table public.product_variants enable row level security;
 alter table public.orders enable row level security;
+
+alter table public.products
+  add column if not exists updated_at timestamptz not null default now();
+
+alter table public.orders
+  add column if not exists fulfillment_status text not null default 'pending';
+
+alter table public.orders
+  add column if not exists admin_notes text;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'orders_fulfillment_status_check'
+  ) then
+    alter table public.orders
+      add constraint orders_fulfillment_status_check
+      check (fulfillment_status in ('pending', 'processing', 'shipped', 'completed'));
+  end if;
+end
+$$;
 
 drop policy if exists "Public products are readable" on public.products;
 create policy "Public products are readable"

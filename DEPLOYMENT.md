@@ -32,6 +32,7 @@ Use these Vercel environment variables:
 ```env
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_server_side_service_role_key
+ADMIN_ACCESS_TOKEN=your_long_random_admin_token
 ```
 
 ## 3. Stripe
@@ -88,3 +89,32 @@ Copy the webhook signing secret into `STRIPE_WEBHOOK_SECRET`.
 
 Before pushing, check that `.env`, `.env.local`, and `.vercel` are ignored.
 They are already covered by this project's `.gitignore`.
+
+## 7. Admin panel
+
+This project now includes an admin panel at:
+
+```text
+/admin/login
+```
+
+It supports:
+
+- size-by-size stock control
+- order list viewing
+- fulfillment status updates
+- internal admin notes
+
+For this to work properly, you should run the latest SQL in:
+
+```text
+store-demo/supabase/schema.sql
+```
+
+That schema adds:
+
+- `product_variants` for per-size inventory
+- `fulfillment_status` on orders
+- `admin_notes` on orders
+
+Without Supabase, the storefront can still load, but the admin panel cannot manage live stock or orders.

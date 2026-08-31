@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "crypto";
+import { applyPaidOrderInventory } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 
@@ -7,6 +8,7 @@ type StripeCheckoutSession = {
   client_reference_id?: string | null;
   amount_total?: number;
   currency?: string;
+  metadata?: Record<string, string>;
   customer_details?: {
     email?: string;
     name?: string;
@@ -75,6 +77,40 @@ async function updateSupabaseOrder(session: StripeCheckoutSession) {
   }
 }
 
+function inventoryItemsFromMetadata(metadata: Record<string, string> | undefined) {
+  if (!metadata) return [];
+
+  const indexes = Array.from(
+    new Set(
+      Object.keys(metadata)
+        .map((key) => key.match(/^item_(\d+)_sku$/)?.[1])
+        .filter((value): value is string => Boolean(value)),
+    ),
+  );
+
+  return indexes
+    .map((index) => {
+      const sku = metadata[`item_${index}_sku`];
+      const size = metadata[`item_${index}_size`];
+      const quantity = Number(metadata[`item_${index}_quantity`] ?? 1);
+      if (
+        (sku !== "BX-MUT-01" && sku !== "BX-MUT-02") ||
+        !size ||
+        Number.isNaN(quantity) ||
+        quantity <= 0
+      ) {
+        return null;
+      }
+
+      return {
+        sku,
+        size: size as "S" | "M" | "L" | "XL" | "2XL",
+        quantity,
+      };
+    })
+    .filter((item): item is { sku: "BX-MUT-01" | "BX-MUT-02"; size: "S" | "M" | "L" | "XL" | "2XL"; quantity: number } => Boolean(item));
+}
+
 export async function POST(request: Request) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) return Response.json({ error: "Stripe webhook is not configured yet." }, { status: 503 });
@@ -91,6 +127,7 @@ export async function POST(request: Request) {
 
   if (event.type === "checkout.session.completed" && event.data?.object?.id) {
     await updateSupabaseOrder(event.data.object);
+    await applyPaidOrderInventory(inventoryItemsFromMetadata(event.data.object.metadata));
   }
 
   return Response.json({ received: true });

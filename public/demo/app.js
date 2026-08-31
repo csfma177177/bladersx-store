@@ -154,12 +154,16 @@ async function beginCheckout() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ items: state.cart.map((item) => ({ sku: PRODUCTS[item.productKey].sku, size: item.size, quantity: item.quantity })) }),
     });
-    if (!response.ok) throw new Error("Stripe is not configured");
-    const data = await response.json();
+    const data = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(data?.error || "Stripe is not configured");
     if (!data.url) throw new Error("Missing checkout URL");
     window.location.assign(data.url);
   } catch (error) {
-    openModal();
+    if (error instanceof Error && !/stripe is not configured/i.test(error.message)) {
+      showToast(error.message);
+    } else {
+      openModal();
+    }
   } finally {
     button.disabled = false;
     button.innerHTML = previous;

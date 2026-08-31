@@ -1,0 +1,278 @@
+import { redirect } from "next/navigation";
+import { hasAdminSession } from "@/lib/admin-auth";
+import { isSupabaseConfigured, listOrders, listProducts } from "@/lib/supabase-admin";
+import styles from "./admin.module.css";
+
+type AdminPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+type InventoryItem = {
+  sku: string;
+  size: string;
+  stock_quantity: number;
+  active: boolean;
+  updated_at?: string | null;
+};
+
+function money(value: number | null) {
+  if (value == null) return "—";
+  return `HK$${(value / 100).toLocaleString("en-HK")}`;
+}
+
+function formatDate(value: string | null) {
+  if (!value) return "—";
+  return new Intl.DateTimeFormat("zh-HK", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+function orderItemsLabel(items: unknown) {
+  if (!Array.isArray(items) || items.length === 0) return "未有商品資料";
+
+  return items
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const entry = item as { sku?: string; size?: string; quantity?: number };
+      return `${entry.sku ?? "ITEM"} / ${entry.size ?? "?"} × ${entry.quantity ?? 1}`;
+    })
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function groupVariants(sku: string, variants: InventoryItem[]) {
+  const order = ["S", "M", "L", "XL", "2XL"];
+  return variants
+    .filter((variant) => variant.sku === sku)
+    .sort((a, b) => order.indexOf(a.size) - order.indexOf(b.size));
+}
+
+function getBanner(status: string | undefined) {
+  if (status === "inventory-saved") return "庫存已更新。";
+  if (status === "order-saved") return "訂單資料已更新。";
+  return null;
+}
+
+export default async function AdminPage({ searchParams }: AdminPageProps) {
+  if (!(await hasAdminSession())) redirect("/admin/login");
+
+  const params = await searchParams;
+  const status = typeof params?.status === "string" ? params.status : undefined;
+  const banner = getBanner(status);
+
+  if (!isSupabaseConfigured()) {
+    return (
+      <main className={styles.shell}>
+        <div className={styles.inner}>
+          <div className={styles.topbar}>
+            <div>
+              <p className={styles.eyebrow}>BLADERS X ADMIN</p>
+              <h1 className={styles.title}>後台已就位，等你接上 Supabase</h1>
+              <p className={styles.copy}>
+                我已經幫你整好 admin 結構。不過要真正管理庫存同訂單，你要先喺 Vercel 加返
+                <code> SUPABASE_URL </code>
+                同
+                <code> SUPABASE_SERVICE_ROLE_KEY </code>。
+              </p>
+            </div>
+
+            <form action="/api/admin/logout" method="post">
+              <button className={styles.logout} type="submit">
+                登出
+              </button>
+            </form>
+          </div>
+
+          <div className={styles.warning}>
+            你而家未連上 Supabase，所以後台未能顯示實際庫存／訂單資料。下一步只要喺 Supabase 建 project，
+            跑一次 schema，然後將環境變數加去 Vercel，就可以正式用。
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  const [{ products, variants }, orders] = await Promise.all([listProducts(), listOrders(40)]);
+  const activeProducts = products.filter((item) => item.active).length;
+  const totalUnits = variants.reduce((sum, item) => sum + item.stock_quantity, 0);
+  const paidOrders = orders.filter((item) => item.status === "paid").length;
+  const revenue = orders
+    .filter((item) => item.status === "paid")
+    .reduce((sum, item) => sum + (item.amount_total ?? 0), 0);
+
+  return (
+    <main className={styles.shell}>
+      <div className={styles.inner}>
+        <div className={styles.topbar}>
+          <div>
+            <p className={styles.eyebrow}>BLADERS X ADMIN</p>
+            <h1 className={styles.title}>Store Control Room</h1>
+            <p className={styles.copy}>
+              呢版俾 admin 同事直接睇庫存、更新尺碼存量，同埋跟進付款後訂單。第一版我先幫你將最實用嘅控制位做好。
+            </p>
+          </div>
+
+          <form action="/api/admin/logout" method="post">
+            <button className={styles.logout} type="submit">
+              登出
+            </button>
+          </form>
+        </div>
+
+        {banner && <div className={styles.banner}>{banner}</div>}
+
+        <section className={styles.stats}>
+          <article className={styles.stat}>
+            <p className={styles.statLabel}>Active products</p>
+            <p className={styles.statValue}>{activeProducts}</p>
+          </article>
+          <article className={styles.stat}>
+            <p className={styles.statLabel}>Units in stock</p>
+            <p className={styles.statValue}>{totalUnits}</p>
+          </article>
+          <article className={styles.stat}>
+            <p className={styles.statLabel}>Paid orders</p>
+            <p className={styles.statValue}>{paidOrders}</p>
+          </article>
+          <article className={styles.stat}>
+            <p className={styles.statLabel}>Revenue</p>
+            <p className={styles.statValue}>{money(revenue)}</p>
+          </article>
+        </section>
+
+        <section className={styles.grid}>
+          <article className={styles.card}>
+            <h2 className={styles.cardTitle}>庫存管理</h2>
+            <p className={styles.cardCopy}>
+              每個顏色、每個尺碼可以獨立更新。你之後再加新產品，都可以沿用同一套表。
+            </p>
+
+            {products.map((product) => {
+              const productVariants = groupVariants(product.sku, variants);
+              return (
+                <section key={product.sku} className={styles.inventoryProduct}>
+                  <div className={styles.inventoryHeader}>
+                    <div>
+                      <h3 className={styles.productTitle}>{product.name}</h3>
+                      <div className={styles.productMeta}>
+                        {product.sku} · {product.colour} · {money(product.price_hkd * 100)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.variantGrid}>
+                    {productVariants.map((variant) => (
+                      <article key={`${variant.sku}-${variant.size}`} className={styles.variantCard}>
+                        <div className={styles.variantTop}>
+                          <span className={styles.sizeTag}>{variant.size}</span>
+                          <span className={styles.productMeta}>
+                            更新：{formatDate(variant.updated_at ?? null)}
+                          </span>
+                        </div>
+
+                        <form className={styles.variantForm} action="/api/admin/inventory" method="post">
+                          <input type="hidden" name="sku" value={variant.sku} />
+                          <input type="hidden" name="size" value={variant.size} />
+
+                          <label className={styles.field}>
+                            現有庫存
+                            <input
+                              className={styles.input}
+                              type="number"
+                              name="stockQuantity"
+                              min="0"
+                              defaultValue={variant.stock_quantity}
+                              required
+                            />
+                          </label>
+
+                          <label className={styles.checkboxRow}>
+                            <input type="checkbox" name="active" defaultChecked={variant.active} />
+                            呢個尺碼可售
+                          </label>
+
+                          <button className={styles.save} type="submit">
+                            儲存尺碼設定
+                          </button>
+                        </form>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+          </article>
+
+          <article className={styles.card}>
+            <h2 className={styles.cardTitle}>訂單管理</h2>
+            <p className={styles.cardCopy}>
+              呢度會睇到付款狀態、客人資料同尺碼組合。你亦可以更新 fulfillment 狀態同內部備註。
+            </p>
+
+            {orders.length === 0 ? (
+              <div className={styles.empty}>暫時未有訂單。</div>
+            ) : (
+              <div className={styles.orders}>
+                {orders.map((order) => (
+                  <article key={order.id} className={styles.orderCard}>
+                    <div className={styles.orderTop}>
+                      <div>
+                        <h3 className={styles.orderTitle}>
+                          {order.customer_name || "未填姓名"} · {money(order.amount_total)}
+                        </h3>
+                        <div className={styles.orderMeta}>
+                          {order.customer_email || "未有 email"} · 建立於 {formatDate(order.created_at)}
+                          {order.paid_at ? ` · 付款於 ${formatDate(order.paid_at)}` : ""}
+                        </div>
+                      </div>
+
+                      <div className={styles.statusPills}>
+                        <span className={styles.pill}>{order.status}</span>
+                        <span className={styles.pill}>{order.fulfillment_status}</span>
+                      </div>
+                    </div>
+
+                    <div className={styles.orderItems}>{orderItemsLabel(order.items)}</div>
+
+                    <form className={styles.variantForm} action="/api/admin/orders" method="post">
+                      <input type="hidden" name="id" value={order.id} />
+
+                      <label className={styles.field}>
+                        Fulfillment 狀態
+                        <select
+                          className={styles.select}
+                          name="fulfillmentStatus"
+                          defaultValue={order.fulfillment_status || "pending"}
+                        >
+                          <option value="pending">pending</option>
+                          <option value="processing">processing</option>
+                          <option value="shipped">shipped</option>
+                          <option value="completed">completed</option>
+                        </select>
+                      </label>
+
+                      <label className={styles.field}>
+                        Admin 備註
+                        <textarea
+                          className={styles.textarea}
+                          name="adminNotes"
+                          defaultValue={order.admin_notes ?? ""}
+                          placeholder="例如：已 WhatsApp 聯絡、等補貨、已安排交收"
+                        />
+                      </label>
+
+                      <button className={styles.save} type="submit">
+                        更新訂單
+                      </button>
+                    </form>
+                  </article>
+                ))}
+              </div>
+            )}
+          </article>
+        </section>
+      </div>
+    </main>
+  );
+}
