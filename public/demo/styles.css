@@ -258,8 +258,9 @@
   }
   .culture-section__line { display: block; white-space: nowrap; }
   .culture-section__line--one { margin-left: 0; }
-  .culture-section__line--two { margin-left: 1.08em; }
-  .culture-section__line--three { margin-left: 2.08em; }
+  .culture-section__live { display: inline-block; margin-left: .16em; }
+  .culture-section__line--two { margin-left: .72em; }
+  .culture-section__line--three { margin-left: 1.44em; }
   .culture-section__code::after { content: "MEMBER DIVISION"; position: absolute; left: 0; bottom: -72px; color: transparent; -webkit-text-stroke: 1px rgba(11,14,23,.38); font-size: .33em; letter-spacing: .04em; }
   .culture-section .eyebrow { color: #4e5565; }
   .culture-section h2 em { -webkit-text-stroke-color: #0b0e17; }
@@ -376,8 +377,9 @@
     .spec-grid article:last-child { border-bottom: 0; }
     .culture-section { grid-template-columns: 1fr; gap: 90px; padding: 80px 18px; }
     .culture-section__code { font-size: 22vw; line-height: .9; transform: none; }
-    .culture-section__line--two { margin-left: .72em; }
-    .culture-section__line--three { margin-left: 1.3em; }
+    .culture-section__live { margin-left: .12em; }
+    .culture-section__line--two { margin-left: .38em; }
+    .culture-section__line--three { margin-left: .82em; }
     footer { grid-template-columns: 1fr; gap: 22px; padding: 36px 18px; }
     footer p { line-height: 1.6; }
     .demo-modal { padding: 34px 24px 26px; }
