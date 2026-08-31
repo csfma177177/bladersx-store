@@ -11,7 +11,10 @@ export default async function Home({ searchParams }: HomeProps) {
     if (typeof value === "string") frameParams.set(key, value);
   }
 
-  const frameSrc = frameParams.size > 0 ? `/demo/?${frameParams.toString()}` : "/demo/";
+  const frameSrc =
+    frameParams.size > 0
+      ? `/demo/index.html?${frameParams.toString()}`
+      : "/demo/index.html";
 
   return (
     <main className="store-shell">
