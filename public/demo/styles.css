@@ -220,7 +220,7 @@
 
   .system-section { position: relative; display: grid; grid-template-columns: .65fr 1.35fr; gap: 5vw; background: #070912; }
   .system-section::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 72% 35%, rgba(71, 206, 255, .1), transparent 33%); }
-  .system-section__intro { position: sticky; top: 40px; z-index: 2; align-self: start; padding-top: 30px; padding-bottom: 52px; }
+  .system-section__intro { position: relative; z-index: 2; align-self: start; padding-top: 30px; padding-bottom: 52px; }
   .system-section h2 { max-width: 7.1ch; margin-bottom: 0; line-height: .9; }
   .system-section h2 em { display: block; margin-top: 8px; }
   .system-section__intro > p:last-child { max-width: 420px; margin-top: 42px; }
