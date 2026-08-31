@@ -130,6 +130,17 @@
   border-top: 1px solid rgba(138, 168, 255, 0.12);
 }
 
+.pricingPanel {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(6, 10, 22, 0.86);
+  border: 1px solid rgba(138, 168, 255, 0.12);
+}
+
 .inventoryHeader {
   display: flex;
   align-items: baseline;
@@ -299,6 +310,10 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .pricingPanel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .variantGrid {
     grid-template-columns: 1fr;
   }
@@ -314,6 +329,10 @@
   }
 
   .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .pricingPanel {
     grid-template-columns: 1fr;
   }
 }

@@ -37,22 +37,17 @@ ADMIN_ACCESS_TOKEN=your_long_random_admin_token
 
 ## 3. Stripe
 
-Create two Stripe Products and Prices:
-
-- `BX-MUT-01`: Utility Tee - Black
-- `BX-MUT-02`: Utility Tee - Navy
-
 Use these Vercel environment variables:
 
 ```env
 STRIPE_SECRET_KEY=rotated_stripe_secret_key_from_dashboard
-STRIPE_PRICE_BLACK=price_for_black_tee
-STRIPE_PRICE_NAVY=price_for_navy_tee
 STRIPE_WEBHOOK_SECRET=whsec_from_stripe_webhook
 ```
 
-For production, use live Stripe products, live Price IDs, and a rotated live
-secret key that has never been pasted into chat or committed to Git.
+For production, use a rotated live secret key that has never been pasted into
+chat or committed to Git. This storefront now creates Checkout Session line
+items dynamically, so product pricing can be controlled from the admin panel
+instead of fixed Stripe Price IDs.
 
 ## 4. Vercel
 
@@ -101,6 +96,8 @@ This project now includes an admin panel at:
 It supports:
 
 - size-by-size stock control
+- product original price / member price / sale price
+- switch between member price and sale price
 - order list viewing
 - fulfillment status updates
 - internal admin notes

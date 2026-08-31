@@ -1,4 +1,11 @@
-import { loadInventorySnapshot } from "@/lib/supabase-admin";
+import {
+  DEFAULT_PRODUCTS,
+  getEffectivePriceHkd,
+  getEffectivePriceLabel,
+  getStoreProducts,
+  loadInventorySnapshot,
+  type ProductRow,
+} from "@/lib/supabase-admin";
 
 type CheckoutItem = {
   sku: "BX-MUT-01" | "BX-MUT-02";
@@ -7,15 +14,6 @@ type CheckoutItem = {
 };
 
 const allowedSizes = new Set(["S", "M", "L", "XL", "2XL"]);
-const priceMap: Record<CheckoutItem["sku"], string | undefined> = {
-  "BX-MUT-01": process.env.STRIPE_PRICE_BLACK,
-  "BX-MUT-02": process.env.STRIPE_PRICE_NAVY,
-};
-
-const catalogue: Record<CheckoutItem["sku"], { name: string; price: number }> = {
-  "BX-MUT-01": { name: "Utility Tee - Black", price: 49800 },
-  "BX-MUT-02": { name: "Utility Tee - Navy", price: 49800 },
-};
 
 export const runtime = "nodejs";
 
@@ -40,6 +38,14 @@ function normaliseItems(items: unknown): CheckoutItem[] | null {
   return normalised;
 }
 
+async function getCatalogueMap() {
+  const products = await getStoreProducts().catch(() => DEFAULT_PRODUCTS);
+  return products.reduce<Record<CheckoutItem["sku"], ProductRow>>((acc, product) => {
+    acc[product.sku] = product;
+    return acc;
+  }, {} as Record<CheckoutItem["sku"], ProductRow>);
+}
+
 async function createSupabaseOrder(record: Record<string, unknown>) {
   const supabaseUrl = process.env.SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -61,7 +67,7 @@ async function createSupabaseOrder(record: Record<string, unknown>) {
   }
 }
 
-async function validateInventory(items: CheckoutItem[]) {
+async function validateInventory(items: CheckoutItem[], catalogue: Record<CheckoutItem["sku"], ProductRow>) {
   const snapshot = await loadInventorySnapshot(
     items
       .filter((item): item is CheckoutItem & { size: "S" | "M" | "L" | "XL" | "2XL" } => allowedSizes.has(item.size))
@@ -75,8 +81,9 @@ async function validateInventory(items: CheckoutItem[]) {
   if (!snapshot) return null;
 
   const unavailable = items.find((item) => {
+    const product = catalogue[item.sku];
     const variant = snapshot.find((entry) => entry.sku === item.sku && entry.size === item.size);
-    return !variant || !variant.active || variant.stock_quantity < item.quantity;
+    return !product?.active || !variant || !variant.active || variant.stock_quantity < item.quantity;
   });
 
   return unavailable
@@ -85,7 +92,7 @@ async function validateInventory(items: CheckoutItem[]) {
 }
 
 export async function POST(request: Request) {
-  if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRICE_BLACK || !process.env.STRIPE_PRICE_NAVY) {
+  if (!process.env.STRIPE_SECRET_KEY) {
     return json({ error: "Stripe is not configured yet." }, 503);
   }
 
@@ -99,20 +106,32 @@ export async function POST(request: Request) {
   const items = normaliseItems(payload.items);
   if (!items) return json({ error: "A valid cart is required." }, 400);
 
-  const inventoryError = await validateInventory(items);
+  const catalogue = await getCatalogueMap();
+  const inventoryError = await validateInventory(items, catalogue);
   if (inventoryError) return json({ error: inventoryError }, 409);
 
   const params = new URLSearchParams();
   const origin = new URL(request.url).origin;
   const clientReferenceId = `bx-${crypto.randomUUID()}`;
-  const amountTotal = items.reduce((sum, item) => sum + catalogue[item.sku].price * item.quantity, 0);
+  const amountTotal = items.reduce(
+    (sum, item) => sum + getEffectivePriceHkd(catalogue[item.sku]) * 100 * item.quantity,
+    0,
+  );
 
   items.forEach((item, index) => {
-    params.append(`line_items[${index}][price]`, priceMap[item.sku] as string);
+    const product = catalogue[item.sku];
+    const unitAmount = getEffectivePriceHkd(product) * 100;
+
+    params.append(`line_items[${index}][price_data][currency]`, "hkd");
+    params.append(`line_items[${index}][price_data][unit_amount]`, String(unitAmount));
+    params.append(`line_items[${index}][price_data][product_data][name]`, product.name);
+    params.append(`line_items[${index}][price_data][product_data][description]`, `${product.colour} / SIZE ${item.size} / ${getEffectivePriceLabel(product)}`);
     params.append(`line_items[${index}][quantity]`, String(item.quantity));
     params.append(`metadata[item_${index}_sku]`, item.sku);
     params.append(`metadata[item_${index}_size]`, item.size);
     params.append(`metadata[item_${index}_quantity]`, String(item.quantity));
+    params.append(`metadata[item_${index}_unit_price_hkd]`, String(getEffectivePriceHkd(product)));
+    params.append(`metadata[item_${index}_price_label]`, getEffectivePriceLabel(product));
   });
 
   params.append("mode", "payment");
@@ -149,7 +168,11 @@ export async function POST(request: Request) {
     status: "checkout_created",
     currency: "hkd",
     amount_total: amountTotal,
-    items,
+    items: items.map((item) => ({
+      ...item,
+      unit_price_hkd: getEffectivePriceHkd(catalogue[item.sku]),
+      price_label: getEffectivePriceLabel(catalogue[item.sku]),
+    })),
     checkout_url: stripeData.url,
   });
 

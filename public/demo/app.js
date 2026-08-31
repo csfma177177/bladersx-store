@@ -3,11 +3,14 @@ const PRODUCTS = {
     sku: "BX-MUT-01",
     name: "UTILITY TEE — BLACK",
     colour: "TACTICAL BLACK",
-    price: 498,
+    originalPrice: 498,
+    memberPrice: 498,
+    salePrice: null,
+    pricingMode: "member",
     images: {
-      front: "/assets/member-black-front.png",
-      back: "/assets/member-black-back.png",
-      detail: "/assets/member-black-detail.png",
+      front: "/assets/member-black-front-v2.png",
+      back: "/assets/member-black-back-v2.png",
+      detail: "/assets/member-black-detail-v2.png",
     },
     alts: {
       front: "黑色會員機能 T-shirt 正面",
@@ -19,11 +22,14 @@ const PRODUCTS = {
     sku: "BX-MUT-02",
     name: "UTILITY TEE — NAVY",
     colour: "FIELD NAVY",
-    price: 498,
+    originalPrice: 498,
+    memberPrice: 498,
+    salePrice: null,
+    pricingMode: "member",
     images: {
-      front: "/assets/member-navy-front.png",
-      back: "/assets/member-navy-back.png",
-      detail: "/assets/member-navy-detail.png",
+      front: "/assets/member-navy-front-v2.png",
+      back: "/assets/member-navy-back-v2.png",
+      detail: "/assets/member-navy-detail-v2.png",
     },
     alts: {
       front: "深藍色會員機能 T-shirt 正面",
@@ -37,7 +43,25 @@ const state = {
   cart: JSON.parse(localStorage.getItem("bx-cart") || "[]"),
 };
 
+const PRODUCT_KEY_BY_SKU = {
+  "BX-MUT-01": "black",
+  "BX-MUT-02": "navy",
+};
+
 const formatMoney = (value) => `HK$${value.toLocaleString("en-HK")}`;
+const getEffectivePrice = (product) => (
+  product.pricingMode === "sale" && product.salePrice ? product.salePrice : product.memberPrice
+);
+const getEffectivePriceLabel = (product) => (
+  product.pricingMode === "sale" && product.salePrice ? "特價" : "會員價"
+);
+const getPriceMeta = (product) => {
+  const bits = [];
+  if (product.originalPrice) bits.push(`原價 HK$${product.originalPrice}`);
+  if (product.memberPrice) bits.push(`會員 HK$${product.memberPrice}`);
+  if (product.salePrice) bits.push(`特價 HK$${product.salePrice}`);
+  return bits.join(" · ");
+};
 const drawer = document.querySelector("[data-cart-drawer]");
 const drawerOverlay = document.querySelector("[data-drawer-overlay]");
 const modal = document.querySelector("[data-demo-modal]");
@@ -90,6 +114,46 @@ function persistCart() {
   renderCart();
 }
 
+function updatePricingUI() {
+  document.querySelectorAll("[data-price-block]").forEach((node) => {
+    const product = PRODUCTS[node.dataset.priceBlock];
+    if (!product) return;
+
+    const currentNode = node.querySelector("[data-price-current]");
+    const labelNode = node.querySelector("[data-price-label]");
+    const metaNode = node.querySelector("[data-price-meta]");
+
+    if (currentNode) currentNode.textContent = formatMoney(getEffectivePrice(product));
+    if (labelNode) labelNode.textContent = getEffectivePriceLabel(product);
+    if (metaNode) {
+      const compare = product.originalPrice > getEffectivePrice(product) ? `<s>${formatMoney(product.originalPrice)}</s>` : "";
+      metaNode.innerHTML = `${compare}${getPriceMeta(product)}`;
+    }
+  });
+}
+
+async function loadCatalog() {
+  try {
+    const response = await fetch("/api/catalog", { cache: "no-store" });
+    if (!response.ok) return;
+    const data = await response.json();
+    if (!Array.isArray(data?.products)) return;
+
+    data.products.forEach((row) => {
+      const key = row.key || PRODUCT_KEY_BY_SKU[row.sku];
+      if (!key || !PRODUCTS[key]) return;
+
+      PRODUCTS[key].originalPrice = Number(row.originalPriceHkd) || PRODUCTS[key].originalPrice;
+      PRODUCTS[key].memberPrice = Number(row.memberPriceHkd) || PRODUCTS[key].memberPrice;
+      PRODUCTS[key].salePrice = Number(row.salePriceHkd) || null;
+      PRODUCTS[key].pricingMode = row.pricingMode === "sale" ? "sale" : "member";
+    });
+
+    updatePricingUI();
+    renderCart();
+  } catch {}
+}
+
 function addToCart(productKey, size) {
   const existing = state.cart.find((item) => item.productKey === productKey && item.size === size);
   if (existing) existing.quantity += 1;
@@ -109,7 +173,7 @@ function updateQuantity(index, delta) {
 
 function renderCart() {
   const count = state.cart.reduce((sum, item) => sum + item.quantity, 0);
-  const total = state.cart.reduce((sum, item) => sum + PRODUCTS[item.productKey].price * item.quantity, 0);
+  const total = state.cart.reduce((sum, item) => sum + getEffectivePrice(PRODUCTS[item.productKey]) * item.quantity, 0);
 
   document.querySelectorAll("[data-cart-count]").forEach((node) => { node.textContent = count; });
   document.querySelector("[data-cart-total]").textContent = formatMoney(total);
@@ -134,7 +198,7 @@ function renderCart() {
             <span>${item.quantity}</span>
             <button type="button" data-qty="1" data-index="${index}" aria-label="增加數量">＋</button>
           </div>
-          <strong>${formatMoney(product.price * item.quantity)}</strong>
+          <strong>${formatMoney(getEffectivePrice(product) * item.quantity)}</strong>
         </div>
         <button type="button" class="cart-line__remove" data-remove data-index="${index}" aria-label="移除 ${product.name}">×</button>
       </article>`;
@@ -231,4 +295,6 @@ if (params.get("checkout") === "success") {
   setTimeout(() => showToast("付款完成 / ORDER CONFIRMED"), 350);
 }
 
+updatePricingUI();
+loadCatalog();
 renderCart();

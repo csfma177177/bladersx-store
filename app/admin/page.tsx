@@ -1,6 +1,12 @@
 import { redirect } from "next/navigation";
 import { hasAdminSession } from "@/lib/admin-auth";
-import { isSupabaseConfigured, listOrders, listProducts } from "@/lib/supabase-admin";
+import {
+  getEffectivePriceHkd,
+  getEffectivePriceLabel,
+  isSupabaseConfigured,
+  listOrders,
+  listProducts,
+} from "@/lib/supabase-admin";
 import styles from "./admin.module.css";
 
 type AdminPageProps = {
@@ -51,6 +57,7 @@ function groupVariants(sku: string, variants: InventoryItem[]) {
 function getBanner(status: string | undefined) {
   if (status === "inventory-saved") return "庫存已更新。";
   if (status === "order-saved") return "訂單資料已更新。";
+  if (status === "pricing-saved") return "產品定價已更新。";
   return null;
 }
 
@@ -93,7 +100,45 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     );
   }
 
-  const [{ products, variants }, orders] = await Promise.all([listProducts(), listOrders(40)]);
+  let products;
+  let variants;
+  let orders;
+
+  try {
+    const result = await Promise.all([listProducts(), listOrders(40)]);
+    products = result[0].products;
+    variants = result[0].variants;
+    orders = result[1];
+  } catch {
+    return (
+      <main className={styles.shell}>
+        <div className={styles.inner}>
+          <div className={styles.topbar}>
+            <div>
+              <p className={styles.eyebrow}>BLADERS X ADMIN</p>
+              <h1 className={styles.title}>請更新 Supabase schema</h1>
+              <p className={styles.copy}>
+                你個 project 已經連咗 Supabase，但資料表仲未升級到最新版本，所以定價／庫存後台未能正常讀取。
+              </p>
+            </div>
+
+            <form action="/api/admin/logout" method="post">
+              <button className={styles.logout} type="submit">
+                登出
+              </button>
+            </form>
+          </div>
+
+          <div className={styles.warning}>
+            請去 Supabase SQL Editor，重新執行最新嘅
+            <code> store-demo/supabase/schema.sql </code>
+            ，之後再 refresh 呢個 admin 頁面。
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   const activeProducts = products.filter((item) => item.active).length;
   const totalUnits = variants.reduce((sum, item) => sum + item.stock_quantity, 0);
   const paidOrders = orders.filter((item) => item.status === "paid").length;
@@ -156,10 +201,67 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     <div>
                       <h3 className={styles.productTitle}>{product.name}</h3>
                       <div className={styles.productMeta}>
-                        {product.sku} · {product.colour} · {money(product.price_hkd * 100)}
+                        {product.sku} · {product.colour} · 現時顯示 {money(getEffectivePriceHkd(product) * 100)} / {getEffectivePriceLabel(product)}
                       </div>
                     </div>
                   </div>
+
+                  <form className={styles.pricingPanel} action="/api/admin/products" method="post">
+                    <input type="hidden" name="sku" value={product.sku} />
+
+                    <label className={styles.field}>
+                      原價
+                      <input
+                        className={styles.input}
+                        type="number"
+                        name="originalPriceHkd"
+                        min="0"
+                        defaultValue={product.original_price_hkd}
+                        required
+                      />
+                    </label>
+
+                    <label className={styles.field}>
+                      會員價
+                      <input
+                        className={styles.input}
+                        type="number"
+                        name="memberPriceHkd"
+                        min="0"
+                        defaultValue={product.member_price_hkd}
+                        required
+                      />
+                    </label>
+
+                    <label className={styles.field}>
+                      特價
+                      <input
+                        className={styles.input}
+                        type="number"
+                        name="salePriceHkd"
+                        min="0"
+                        defaultValue={product.sale_price_hkd ?? ""}
+                        placeholder="留空或 0 代表未開特價"
+                      />
+                    </label>
+
+                    <label className={styles.field}>
+                      前台顯示售價
+                      <select className={styles.select} name="pricingMode" defaultValue={product.pricing_mode}>
+                        <option value="member">會員價</option>
+                        <option value="sale">特價</option>
+                      </select>
+                    </label>
+
+                    <label className={styles.checkboxRow}>
+                      <input type="checkbox" name="active" defaultChecked={product.active} />
+                      呢個產品上架中
+                    </label>
+
+                    <button className={styles.save} type="submit">
+                      儲存產品定價
+                    </button>
+                  </form>
 
                   <div className={styles.variantGrid}>
                     {productVariants.map((variant) => (
