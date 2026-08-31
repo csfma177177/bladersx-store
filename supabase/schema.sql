@@ -14,19 +14,6 @@ create table if not exists public.products (
   updated_at timestamptz not null default now()
 );
 
-insert into public.products (sku, name, colour, price_hkd, original_price_hkd, member_price_hkd, sale_price_hkd, pricing_mode)
-values
-  ('BX-MUT-01', 'Utility Tee - Black', 'Tactical Black', 498, 498, 498, null, 'member'),
-  ('BX-MUT-02', 'Utility Tee - Navy', 'Field Navy', 498, 498, 498, null, 'member')
-on conflict (sku) do update set
-  name = excluded.name,
-  colour = excluded.colour,
-  price_hkd = excluded.price_hkd,
-  original_price_hkd = excluded.original_price_hkd,
-  member_price_hkd = excluded.member_price_hkd,
-  sale_price_hkd = excluded.sale_price_hkd,
-  pricing_mode = excluded.pricing_mode;
-
 create table if not exists public.orders (
   id uuid primary key default gen_random_uuid(),
   stripe_session_id text unique not null,
@@ -56,6 +43,85 @@ create table if not exists public.product_variants (
   updated_at timestamptz not null default now(),
   primary key (sku, size)
 );
+
+alter table public.products
+  add column if not exists active boolean not null default true;
+
+alter table public.products
+  add column if not exists created_at timestamptz not null default now();
+
+alter table public.products
+  add column if not exists updated_at timestamptz not null default now();
+
+alter table public.products
+  add column if not exists original_price_hkd integer not null default 498;
+
+alter table public.products
+  add column if not exists member_price_hkd integer not null default 498;
+
+alter table public.products
+  add column if not exists sale_price_hkd integer;
+
+alter table public.products
+  add column if not exists pricing_mode text not null default 'member';
+
+alter table public.orders
+  add column if not exists currency text not null default 'hkd';
+
+alter table public.orders
+  add column if not exists amount_total integer;
+
+alter table public.orders
+  add column if not exists customer_email text;
+
+alter table public.orders
+  add column if not exists customer_name text;
+
+alter table public.orders
+  add column if not exists customer_phone text;
+
+alter table public.orders
+  add column if not exists fulfillment_status text not null default 'pending';
+
+alter table public.orders
+  add column if not exists admin_notes text;
+
+alter table public.orders
+  add column if not exists items jsonb not null default '[]'::jsonb;
+
+alter table public.orders
+  add column if not exists checkout_url text;
+
+alter table public.orders
+  add column if not exists paid_at timestamptz;
+
+alter table public.orders
+  add column if not exists created_at timestamptz not null default now();
+
+alter table public.orders
+  add column if not exists updated_at timestamptz not null default now();
+
+alter table public.product_variants
+  add column if not exists active boolean not null default true;
+
+alter table public.product_variants
+  add column if not exists created_at timestamptz not null default now();
+
+alter table public.product_variants
+  add column if not exists updated_at timestamptz not null default now();
+
+insert into public.products (sku, name, colour, price_hkd, original_price_hkd, member_price_hkd, sale_price_hkd, pricing_mode)
+values
+  ('BX-MUT-01', 'Utility Tee - Black', 'Tactical Black', 498, 498, 498, null, 'member'),
+  ('BX-MUT-02', 'Utility Tee - Navy', 'Field Navy', 498, 498, 498, null, 'member')
+on conflict (sku) do update set
+  name = excluded.name,
+  colour = excluded.colour,
+  price_hkd = excluded.price_hkd,
+  original_price_hkd = excluded.original_price_hkd,
+  member_price_hkd = excluded.member_price_hkd,
+  sale_price_hkd = excluded.sale_price_hkd,
+  pricing_mode = excluded.pricing_mode;
 
 insert into public.product_variants (sku, size, stock_quantity, active)
 select products.sku, sizes.size, 0, true
@@ -98,27 +164,6 @@ execute function public.set_updated_at();
 alter table public.products enable row level security;
 alter table public.product_variants enable row level security;
 alter table public.orders enable row level security;
-
-alter table public.products
-  add column if not exists updated_at timestamptz not null default now();
-
-alter table public.products
-  add column if not exists original_price_hkd integer not null default 498;
-
-alter table public.products
-  add column if not exists member_price_hkd integer not null default 498;
-
-alter table public.products
-  add column if not exists sale_price_hkd integer;
-
-alter table public.products
-  add column if not exists pricing_mode text not null default 'member';
-
-alter table public.orders
-  add column if not exists fulfillment_status text not null default 'pending';
-
-alter table public.orders
-  add column if not exists admin_notes text;
 
 do $$
 begin
