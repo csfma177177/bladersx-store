@@ -427,7 +427,8 @@
   .size-chart-pills span { display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border: 1px solid rgba(164,180,218,.16); background: rgba(255,255,255,.04); color: #d6dbea; font-size: 9px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
   .demo-modal--size-chart h2 { font-size: clamp(44px, 5vw, 72px); }
   .demo-modal--size-chart .demo-modal__copy { max-width: 760px; margin-bottom: 32px; }
-  .size-chart-grid--modal { grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr); gap: 24px; margin-top: 24px; }
+  .size-chart-grid--modal { grid-template-columns: 1fr; gap: 24px; margin-top: 24px; }
+  .demo-modal--size-chart .size-chart-visuals { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .demo-modal--size-chart .size-chart-table-wrap,
   .demo-modal--size-chart .size-diagram-card { position: relative; background: linear-gradient(180deg, rgba(13,17,29,.94) 0%, rgba(9,12,23,.94) 100%); border-color: rgba(164,180,218,.14); }
   .demo-modal--size-chart .size-chart-table-wrap::before,
@@ -526,6 +527,7 @@
     .size-chart-pills { justify-content: flex-start; }
     .size-chart-pills span { min-height: 28px; padding: 0 10px; }
     .size-chart-grid--modal { grid-template-columns: 1fr; gap: 16px; margin-top: 18px; }
+    .demo-modal--size-chart .size-chart-visuals { grid-template-columns: 1fr; }
   }
 
   @media (prefers-reduced-motion: reduce) {
