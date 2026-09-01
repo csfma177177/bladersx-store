@@ -201,7 +201,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     <div>
                       <h3 className={styles.productTitle}>{product.name}</h3>
                       <div className={styles.productMeta}>
-                        {product.sku} · {product.colour} · 現時顯示 {money(getEffectivePriceHkd(product) * 100)} / {getEffectivePriceLabel(product)}
+                        {product.sku} · {product.colour} · 現時顯示 {money(getEffectivePriceHkd(product) * 100)} / {getEffectivePriceLabel(product) ?? "原價"}
                       </div>
                     </div>
                   </div>
@@ -228,8 +228,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                         type="number"
                         name="memberPriceHkd"
                         min="0"
-                        defaultValue={product.member_price_hkd}
-                        required
+                        defaultValue={product.member_price_hkd ?? ""}
+                        placeholder="留空代表唔顯示會員價"
                       />
                     </label>
 
@@ -248,6 +248,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     <label className={styles.field}>
                       前台顯示售價
                       <select className={styles.select} name="pricingMode" defaultValue={product.pricing_mode}>
+                        <option value="original">原價</option>
                         <option value="member">會員價</option>
                         <option value="sale">特價</option>
                       </select>

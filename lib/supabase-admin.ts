@@ -8,7 +8,7 @@ type Json =
 
 export type ProductSku = "BX-MUT-01" | "BX-MUT-02";
 export type ProductKey = "black" | "navy";
-export type PricingMode = "member" | "sale";
+export type PricingMode = "original" | "member" | "sale";
 
 export type InventoryItem = {
   sku: ProductSku;
@@ -22,7 +22,7 @@ export type ProductRow = {
   colour: string;
   price_hkd: number;
   original_price_hkd: number;
-  member_price_hkd: number;
+  member_price_hkd: number | null;
   sale_price_hkd: number | null;
   pricing_mode: PricingMode;
   active: boolean;
@@ -96,16 +96,30 @@ function normalizeProductRow(product: ProductRow): ProductRow {
   return product;
 }
 
-export function getEffectivePriceHkd(product: Pick<ProductRow, "member_price_hkd" | "sale_price_hkd" | "pricing_mode">) {
+export function getEffectivePriceHkd(
+  product: Pick<ProductRow, "original_price_hkd" | "member_price_hkd" | "sale_price_hkd" | "pricing_mode">,
+) {
   if (product.pricing_mode === "sale" && product.sale_price_hkd && product.sale_price_hkd > 0) {
     return product.sale_price_hkd;
   }
 
-  return product.member_price_hkd;
+  if (product.pricing_mode === "member" && product.member_price_hkd && product.member_price_hkd > 0) {
+    return product.member_price_hkd;
+  }
+
+  return product.original_price_hkd;
 }
 
-export function getEffectivePriceLabel(product: Pick<ProductRow, "pricing_mode" | "sale_price_hkd">) {
-  return product.pricing_mode === "sale" && product.sale_price_hkd ? "特價" : "會員價";
+export function getEffectivePriceLabel(product: Pick<ProductRow, "pricing_mode" | "sale_price_hkd" | "member_price_hkd">) {
+  if (product.pricing_mode === "sale" && product.sale_price_hkd && product.sale_price_hkd > 0) {
+    return "特價";
+  }
+
+  if (product.pricing_mode === "member" && product.member_price_hkd && product.member_price_hkd > 0) {
+    return "會員價";
+  }
+
+  return null;
 }
 
 function getSupabaseConfig() {
@@ -201,19 +215,29 @@ export async function updateProductVariant(input: {
 export async function updateProductPricing(input: {
   sku: string;
   originalPriceHkd: number;
-  memberPriceHkd: number;
+  memberPriceHkd: number | null;
   salePriceHkd: number | null;
   pricingMode: PricingMode;
   active: boolean;
 }) {
+  const originalPriceHkd = Math.max(0, input.originalPriceHkd);
+  const memberPriceHkd = input.memberPriceHkd && input.memberPriceHkd > 0 ? Math.max(0, input.memberPriceHkd) : null;
+  const salePriceHkd = input.salePriceHkd && input.salePriceHkd > 0 ? input.salePriceHkd : null;
+  const effectivePriceHkd =
+    input.pricingMode === "sale" && salePriceHkd
+      ? salePriceHkd
+      : input.pricingMode === "member" && memberPriceHkd
+        ? memberPriceHkd
+        : originalPriceHkd;
+
   return supabaseFetch<null>(`/rest/v1/products?sku=eq.${encodeFilter(input.sku)}`, {
     method: "PATCH",
     headers: { prefer: "return=minimal" },
     body: JSON.stringify({
-      price_hkd: Math.max(0, input.memberPriceHkd),
-      original_price_hkd: Math.max(0, input.originalPriceHkd),
-      member_price_hkd: Math.max(0, input.memberPriceHkd),
-      sale_price_hkd: input.salePriceHkd && input.salePriceHkd > 0 ? input.salePriceHkd : null,
+      price_hkd: effectivePriceHkd,
+      original_price_hkd: originalPriceHkd,
+      member_price_hkd: memberPriceHkd,
+      sale_price_hkd: salePriceHkd,
       pricing_mode: input.pricingMode,
       active: input.active,
     }),

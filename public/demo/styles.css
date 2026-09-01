@@ -177,8 +177,8 @@
   .hero__rail { position: absolute; z-index: 3; right: 18px; top: 160px; bottom: 54px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; color: var(--dim); font-size: 8px; font-weight: 800; letter-spacing: .2em; writing-mode: vertical-rl; }
 
   .ticker { overflow: hidden; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: #0c0f1b; }
-  .ticker div { width: max-content; display: flex; align-items: center; gap: 30px; padding: 15px 0; animation: ticker 24s linear infinite; }
-  .ticker span { font: 900 16px/1 var(--font-wide); letter-spacing: .12em; }
+  .ticker div { width: max-content; display: flex; align-items: center; gap: 26px; padding: 15px 0; animation: ticker 54s linear infinite; }
+  .ticker span { font: 900 14px/1 var(--font-wide); letter-spacing: .08em; white-space: nowrap; }
   .ticker i { color: var(--violet); font-style: normal; }
   @keyframes ticker { to { transform: translateX(-50%); } }
 

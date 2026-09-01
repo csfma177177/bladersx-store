@@ -121,17 +121,19 @@ export async function POST(request: Request) {
   items.forEach((item, index) => {
     const product = catalogue[item.sku];
     const unitAmount = getEffectivePriceHkd(product) * 100;
+    const priceLabel = getEffectivePriceLabel(product);
+    const description = [product.colour, `SIZE ${item.size}`, priceLabel].filter(Boolean).join(" / ");
 
     params.append(`line_items[${index}][price_data][currency]`, "hkd");
     params.append(`line_items[${index}][price_data][unit_amount]`, String(unitAmount));
     params.append(`line_items[${index}][price_data][product_data][name]`, product.name);
-    params.append(`line_items[${index}][price_data][product_data][description]`, `${product.colour} / SIZE ${item.size} / ${getEffectivePriceLabel(product)}`);
+    params.append(`line_items[${index}][price_data][product_data][description]`, description);
     params.append(`line_items[${index}][quantity]`, String(item.quantity));
     params.append(`metadata[item_${index}_sku]`, item.sku);
     params.append(`metadata[item_${index}_size]`, item.size);
     params.append(`metadata[item_${index}_quantity]`, String(item.quantity));
     params.append(`metadata[item_${index}_unit_price_hkd]`, String(getEffectivePriceHkd(product)));
-    params.append(`metadata[item_${index}_price_label]`, getEffectivePriceLabel(product));
+    params.append(`metadata[item_${index}_price_label]`, priceLabel ?? "");
   });
 
   params.append("mode", "payment");

@@ -49,14 +49,19 @@ const PRODUCT_KEY_BY_SKU = {
 };
 
 const formatMoney = (value) => `HK$${value.toLocaleString("en-HK")}`;
-const getEffectivePrice = (product) => (
-  product.pricingMode === "sale" && product.salePrice ? product.salePrice : product.memberPrice
-);
-const getEffectivePriceLabel = (product) => (
-  product.pricingMode === "sale" && product.salePrice ? "特價" : "會員價"
-);
+const getEffectivePrice = (product) => {
+  if (product.pricingMode === "sale" && product.salePrice) return product.salePrice;
+  if (product.pricingMode === "member" && product.memberPrice) return product.memberPrice;
+  return product.originalPrice;
+};
+const getEffectivePriceLabel = (product) => {
+  if (product.pricingMode === "sale" && product.salePrice) return "特價";
+  if (product.pricingMode === "member" && product.memberPrice) return "會員價";
+  return "";
+};
 const getPriceMeta = (product) => {
   const bits = [];
+  if (!product.memberPrice && !product.salePrice) return "";
   if (product.originalPrice) bits.push(`原價 HK$${product.originalPrice}`);
   if (product.memberPrice) bits.push(`會員 HK$${product.memberPrice}`);
   if (product.salePrice) bits.push(`特價 HK$${product.salePrice}`);
@@ -122,12 +127,20 @@ function updatePricingUI() {
     const currentNode = node.querySelector("[data-price-current]");
     const labelNode = node.querySelector("[data-price-label]");
     const metaNode = node.querySelector("[data-price-meta]");
+    const label = getEffectivePriceLabel(product);
+    const effectivePrice = getEffectivePrice(product);
+    const meta = getPriceMeta(product);
+    const compare = product.originalPrice > effectivePrice ? `<s>${formatMoney(product.originalPrice)}</s>` : "";
 
-    if (currentNode) currentNode.textContent = formatMoney(getEffectivePrice(product));
-    if (labelNode) labelNode.textContent = getEffectivePriceLabel(product);
+    if (currentNode) currentNode.textContent = formatMoney(effectivePrice);
+    if (labelNode) {
+      labelNode.textContent = label;
+      labelNode.hidden = !label;
+    }
     if (metaNode) {
-      const compare = product.originalPrice > getEffectivePrice(product) ? `<s>${formatMoney(product.originalPrice)}</s>` : "";
-      metaNode.innerHTML = `${compare}${getPriceMeta(product)}`;
+      const markup = `${compare}${meta}`;
+      metaNode.innerHTML = markup;
+      metaNode.hidden = !markup;
     }
   });
 }
@@ -146,9 +159,9 @@ async function loadCatalog() {
       if (row.name) PRODUCTS[key].name = String(row.name).toUpperCase().replace(" - ", " — ");
       if (row.colour) PRODUCTS[key].colour = String(row.colour).toUpperCase();
       PRODUCTS[key].originalPrice = Number(row.originalPriceHkd) || PRODUCTS[key].originalPrice;
-      PRODUCTS[key].memberPrice = Number(row.memberPriceHkd) || PRODUCTS[key].memberPrice;
+      PRODUCTS[key].memberPrice = row.memberPriceHkd == null ? null : Number(row.memberPriceHkd) || null;
       PRODUCTS[key].salePrice = Number(row.salePriceHkd) || null;
-      PRODUCTS[key].pricingMode = row.pricingMode === "sale" ? "sale" : "member";
+      PRODUCTS[key].pricingMode = ["original", "member", "sale"].includes(row.pricingMode) ? row.pricingMode : "original";
     });
 
     updatePricingUI();

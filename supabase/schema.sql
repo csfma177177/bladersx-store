@@ -6,9 +6,9 @@ create table if not exists public.products (
   colour text not null,
   price_hkd integer not null,
   original_price_hkd integer not null default 498,
-  member_price_hkd integer not null default 498,
+  member_price_hkd integer,
   sale_price_hkd integer,
-  pricing_mode text not null default 'member',
+  pricing_mode text not null default 'original',
   active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -57,13 +57,19 @@ alter table public.products
   add column if not exists original_price_hkd integer not null default 498;
 
 alter table public.products
-  add column if not exists member_price_hkd integer not null default 498;
+  add column if not exists member_price_hkd integer;
 
 alter table public.products
   add column if not exists sale_price_hkd integer;
 
 alter table public.products
-  add column if not exists pricing_mode text not null default 'member';
+  add column if not exists pricing_mode text not null default 'original';
+
+alter table public.products
+  alter column member_price_hkd drop not null;
+
+alter table public.products
+  alter column pricing_mode set default 'original';
 
 alter table public.orders
   add column if not exists currency text not null default 'hkd';
@@ -117,11 +123,7 @@ values
 on conflict (sku) do update set
   name = excluded.name,
   colour = excluded.colour,
-  price_hkd = excluded.price_hkd,
-  original_price_hkd = excluded.original_price_hkd,
-  member_price_hkd = excluded.member_price_hkd,
-  sale_price_hkd = excluded.sale_price_hkd,
-  pricing_mode = excluded.pricing_mode;
+  active = true;
 
 insert into public.product_variants (sku, size, stock_quantity, active)
 select products.sku, sizes.size, 0, true
@@ -165,18 +167,15 @@ alter table public.products enable row level security;
 alter table public.product_variants enable row level security;
 alter table public.orders enable row level security;
 
+alter table public.products
+  drop constraint if exists products_pricing_mode_check;
+
+alter table public.products
+  add constraint products_pricing_mode_check
+  check (pricing_mode in ('original', 'member', 'sale'));
+
 do $$
 begin
-  if not exists (
-    select 1
-    from pg_constraint
-    where conname = 'products_pricing_mode_check'
-  ) then
-    alter table public.products
-      add constraint products_pricing_mode_check
-      check (pricing_mode in ('member', 'sale'));
-  end if;
-
   if not exists (
     select 1
     from pg_constraint
@@ -192,7 +191,19 @@ $$;
 update public.products
 set
   original_price_hkd = coalesce(original_price_hkd, price_hkd),
-  member_price_hkd = coalesce(member_price_hkd, price_hkd)
+  price_hkd = coalesce(
+    case
+      when pricing_mode = 'sale' and sale_price_hkd is not null and sale_price_hkd > 0 then sale_price_hkd
+      when pricing_mode = 'member' and member_price_hkd is not null and member_price_hkd > 0 then member_price_hkd
+      else original_price_hkd
+    end,
+    price_hkd
+  ),
+  pricing_mode = case
+    when pricing_mode = 'sale' and sale_price_hkd is not null and sale_price_hkd > 0 then 'sale'
+    when pricing_mode = 'member' and member_price_hkd is not null and member_price_hkd > 0 then 'member'
+    else 'original'
+  end
 where true;
 
 drop policy if exists "Public products are readable" on public.products;
