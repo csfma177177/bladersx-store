@@ -70,6 +70,7 @@ const getPriceMeta = (product) => {
 const drawer = document.querySelector("[data-cart-drawer]");
 const drawerOverlay = document.querySelector("[data-drawer-overlay]");
 const modal = document.querySelector("[data-demo-modal]");
+const sizeChartModal = document.querySelector("[data-size-chart-modal]");
 const modalOverlay = document.querySelector("[data-modal-overlay]");
 const toast = document.querySelector("[data-toast]");
 let toastTimer;
@@ -100,18 +101,28 @@ function closeCart() {
   lockPage(false);
 }
 
-function openModal() {
-  closeCart();
-  modal.classList.add("is-open");
-  modalOverlay.classList.add("is-open");
-  lockPage(true);
-  modal.querySelector("[data-close-modal]").focus();
+function getOpenModal() {
+  if (sizeChartModal.classList.contains("is-open")) return sizeChartModal;
+  if (modal.classList.contains("is-open")) return modal;
+  return null;
 }
 
-function closeModal() {
-  modal.classList.remove("is-open");
-  modalOverlay.classList.remove("is-open");
-  lockPage(false);
+function openModal(targetModal = modal) {
+  closeCart();
+  targetModal.classList.add("is-open");
+  modalOverlay.classList.add("is-open");
+  lockPage(true);
+  targetModal.querySelector("[data-close-modal]").focus();
+}
+
+function closeModal(targetModal = getOpenModal()) {
+  if (!targetModal) return;
+
+  targetModal.classList.remove("is-open");
+  if (!getOpenModal()) {
+    modalOverlay.classList.remove("is-open");
+    lockPage(false);
+  }
 }
 
 function persistCart() {
@@ -278,13 +289,17 @@ document.querySelectorAll(".product-card").forEach((card) => {
     }
     addToCart(productKey, sizeSelect.value);
   });
+
+  card.querySelector("[data-open-size-chart]").addEventListener("click", () => {
+    openModal(sizeChartModal);
+  });
 });
 
 document.querySelectorAll("[data-open-cart]").forEach((button) => button.addEventListener("click", openCart));
 document.querySelectorAll("[data-close-cart]").forEach((button) => button.addEventListener("click", closeCart));
-document.querySelectorAll("[data-close-modal]").forEach((button) => button.addEventListener("click", closeModal));
+document.querySelectorAll("[data-close-modal]").forEach((button) => button.addEventListener("click", () => closeModal()));
 drawerOverlay.addEventListener("click", closeCart);
-modalOverlay.addEventListener("click", closeModal);
+modalOverlay.addEventListener("click", () => closeModal());
 document.querySelector("[data-checkout]").addEventListener("click", beginCheckout);
 
 document.querySelector("[data-cart-items]").addEventListener("click", (event) => {
@@ -299,7 +314,7 @@ document.querySelector("[data-cart-items]").addEventListener("click", (event) =>
 
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
-  if (modal.classList.contains("is-open")) closeModal();
+  if (getOpenModal()) closeModal();
   else if (drawer.classList.contains("is-open")) closeCart();
 });
 
