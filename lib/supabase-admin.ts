@@ -62,8 +62,8 @@ export const SKU_TO_PRODUCT_KEY: Record<ProductSku, ProductKey> = {
 export const DEFAULT_PRODUCTS: ProductRow[] = [
   {
     sku: "BX-MUT-01",
-    name: "Utility Tee - Black",
-    colour: "Tactical Black",
+    name: "Utility Tee - Charcoal Grey",
+    colour: "Charcoal Grey",
     price_hkd: 498,
     original_price_hkd: 498,
     member_price_hkd: 498,
@@ -83,6 +83,18 @@ export const DEFAULT_PRODUCTS: ProductRow[] = [
     active: true,
   },
 ];
+
+function normalizeProductRow(product: ProductRow): ProductRow {
+  if (product.sku === "BX-MUT-01") {
+    return {
+      ...product,
+      name: "Utility Tee - Charcoal Grey",
+      colour: "Charcoal Grey",
+    };
+  }
+
+  return product;
+}
 
 export function getEffectivePriceHkd(product: Pick<ProductRow, "member_price_hkd" | "sale_price_hkd" | "pricing_mode">) {
   if (product.pricing_mode === "sale" && product.sale_price_hkd && product.sale_price_hkd > 0) {
@@ -142,7 +154,7 @@ export async function listProducts() {
     ),
   ]);
 
-  return { products, variants };
+  return { products: products.map(normalizeProductRow), variants };
 }
 
 export async function getStoreProducts() {
@@ -150,9 +162,11 @@ export async function getStoreProducts() {
     return DEFAULT_PRODUCTS;
   }
 
-  return supabaseFetch<ProductRow[]>(
+  const products = await supabaseFetch<ProductRow[]>(
     "/rest/v1/products?select=sku,name,colour,price_hkd,original_price_hkd,member_price_hkd,sale_price_hkd,pricing_mode,active,updated_at&order=sku.asc",
   );
+
+  return products.map(normalizeProductRow);
 }
 
 export async function listOrders(limit = 50) {

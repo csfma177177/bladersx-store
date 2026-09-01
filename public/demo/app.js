@@ -1,21 +1,21 @@
 const PRODUCTS = {
   black: {
     sku: "BX-MUT-01",
-    name: "UTILITY TEE — BLACK",
-    colour: "TACTICAL BLACK",
+    name: "UTILITY TEE — CHARCOAL GREY",
+    colour: "CHARCOAL GREY",
     originalPrice: 498,
     memberPrice: 498,
     salePrice: null,
     pricingMode: "member",
     images: {
-      front: "/assets/member-black-front-v2.png",
-      back: "/assets/member-black-back-v2.png",
-      detail: "/assets/member-black-detail-v2.png",
+      front: "/assets/member-charcoal-front-v1.png",
+      back: "/assets/member-charcoal-back-v1.png",
+      detail: "/assets/member-charcoal-detail-v1.png",
     },
     alts: {
-      front: "黑色會員機能 T-shirt 正面",
-      back: "黑色會員機能 T-shirt 背面",
-      detail: "黑色會員機能 T-shirt 收納系統近鏡",
+      front: "深黑灰會員機能 T-shirt 正面",
+      back: "深黑灰會員機能 T-shirt 背面",
+      detail: "深黑灰會員機能 T-shirt 收納系統近鏡",
     },
   },
   navy: {
@@ -143,6 +143,8 @@ async function loadCatalog() {
       const key = row.key || PRODUCT_KEY_BY_SKU[row.sku];
       if (!key || !PRODUCTS[key]) return;
 
+      if (row.name) PRODUCTS[key].name = String(row.name).toUpperCase().replace(" - ", " — ");
+      if (row.colour) PRODUCTS[key].colour = String(row.colour).toUpperCase();
       PRODUCTS[key].originalPrice = Number(row.originalPriceHkd) || PRODUCTS[key].originalPrice;
       PRODUCTS[key].memberPrice = Number(row.memberPriceHkd) || PRODUCTS[key].memberPrice;
       PRODUCTS[key].salePrice = Number(row.salePriceHkd) || null;

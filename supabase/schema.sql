@@ -112,7 +112,7 @@ alter table public.product_variants
 
 insert into public.products (sku, name, colour, price_hkd, original_price_hkd, member_price_hkd, sale_price_hkd, pricing_mode)
 values
-  ('BX-MUT-01', 'Utility Tee - Black', 'Tactical Black', 498, 498, 498, null, 'member'),
+  ('BX-MUT-01', 'Utility Tee - Charcoal Grey', 'Charcoal Grey', 498, 498, 498, null, 'member'),
   ('BX-MUT-02', 'Utility Tee - Navy', 'Field Navy', 498, 498, 498, null, 'member')
 on conflict (sku) do update set
   name = excluded.name,
