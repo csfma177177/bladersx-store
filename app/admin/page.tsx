@@ -40,8 +40,8 @@ function orderItemsLabel(items: unknown) {
   return items
     .map((item) => {
       if (!item || typeof item !== "object") return null;
-      const entry = item as { sku?: string; size?: string; quantity?: number };
-      return `${entry.sku ?? "ITEM"} / ${entry.size ?? "?"} × ${entry.quantity ?? 1}`;
+      const entry = item as { product_name?: string; sku?: string; size?: string; quantity?: number };
+      return `${entry.product_name ?? entry.sku ?? "ITEM"} / ${entry.size ?? "?"} × ${entry.quantity ?? 1}`;
     })
     .filter(Boolean)
     .join(" · ");
@@ -57,8 +57,25 @@ function groupVariants(sku: string, variants: InventoryItem[]) {
 function getBanner(status: string | undefined) {
   if (status === "inventory-saved") return "庫存已更新。";
   if (status === "order-saved") return "訂單資料已更新。";
+  if (status === "order-missing") return "搵唔返該張訂單，可能已被移除。";
   if (status === "pricing-saved") return "產品定價已更新。";
   return null;
+}
+
+function paymentStatusLabel(status: string) {
+  if (status === "paid") return "已付款";
+  if (status === "checkout_created") return "待付款";
+  if (status === "cancelled") return "已取消";
+  if (status === "refunded") return "已退款";
+  return status;
+}
+
+function fulfillmentStatusLabel(status: string) {
+  if (status === "pending") return "待處理";
+  if (status === "processing") return "處理中";
+  if (status === "shipped") return "已出貨";
+  if (status === "completed") return "已完成";
+  return status;
 }
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
@@ -142,9 +159,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const activeProducts = products.filter((item) => item.active).length;
   const totalUnits = variants.reduce((sum, item) => sum + item.stock_quantity, 0);
   const paidOrders = orders.filter((item) => item.status === "paid").length;
-  const revenue = orders
-    .filter((item) => item.status === "paid")
-    .reduce((sum, item) => sum + (item.amount_total ?? 0), 0);
+  const pendingPayment = orders.filter((item) => item.status !== "paid" && item.status !== "cancelled").length;
 
   return (
     <main className={styles.shell}>
@@ -177,12 +192,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             <p className={styles.statValue}>{totalUnits}</p>
           </article>
           <article className={styles.stat}>
-            <p className={styles.statLabel}>Paid orders</p>
-            <p className={styles.statValue}>{paidOrders}</p>
+            <p className={styles.statLabel}>Pending payment</p>
+            <p className={styles.statValue}>{pendingPayment}</p>
           </article>
           <article className={styles.stat}>
-            <p className={styles.statLabel}>Revenue</p>
-            <p className={styles.statValue}>{money(revenue)}</p>
+            <p className={styles.statLabel}>Paid orders</p>
+            <p className={styles.statValue}>{paidOrders}</p>
           </article>
         </section>
 
@@ -310,7 +325,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <article className={styles.card}>
             <h2 className={styles.cardTitle}>訂單管理</h2>
             <p className={styles.cardCopy}>
-              呢度會睇到付款狀態、客人資料同尺碼組合。你亦可以更新 fulfillment 狀態同內部備註。
+              呢度會睇到待付款訂單、客人資料同尺碼組合。當你收到客人付款之後，可以直接喺度標記做「已付款」。
             </p>
 
             {orders.length === 0 ? (
@@ -325,14 +340,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                           {order.customer_name || "未填姓名"} · {money(order.amount_total)}
                         </h3>
                         <div className={styles.orderMeta}>
-                          {order.customer_email || "未有 email"} · 建立於 {formatDate(order.created_at)}
+                          {order.customer_email || "未有 email"} · {order.customer_phone || "未有電話"} · 建立於 {formatDate(order.created_at)}
                           {order.paid_at ? ` · 付款於 ${formatDate(order.paid_at)}` : ""}
                         </div>
                       </div>
 
                       <div className={styles.statusPills}>
-                        <span className={styles.pill}>{order.status}</span>
-                        <span className={styles.pill}>{order.fulfillment_status}</span>
+                        <span className={styles.pill}>{paymentStatusLabel(order.status)}</span>
+                        <span className={styles.pill}>{fulfillmentStatusLabel(order.fulfillment_status)}</span>
                       </div>
                     </div>
 
@@ -354,6 +369,15 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                           <option value="completed">completed</option>
                         </select>
                       </label>
+
+                      {order.status !== "paid" ? (
+                        <label className={styles.checkboxRow}>
+                          <input type="checkbox" name="markPaid" value="true" />
+                          已收到付款，提交後標記為「已付款」
+                        </label>
+                      ) : (
+                        <div className={styles.orderNote}>此訂單已付款；再次儲存只會更新備註同 fulfillment 狀態。</div>
+                      )}
 
                       <label className={styles.field}>
                         Admin 備註

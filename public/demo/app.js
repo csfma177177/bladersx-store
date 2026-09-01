@@ -39,6 +39,8 @@ const PRODUCTS = {
   },
 };
 
+const AVAILABLE_SIZES = ["S", "M", "L", "XL", "2XL"];
+
 const state = {
   cart: JSON.parse(localStorage.getItem("bx-cart") || "[]"),
 };
@@ -49,31 +51,46 @@ const PRODUCT_KEY_BY_SKU = {
 };
 
 const formatMoney = (value) => `HK$${value.toLocaleString("en-HK")}`;
-const getEffectivePrice = (product) => {
+const drawer = document.querySelector("[data-cart-drawer]");
+const drawerOverlay = document.querySelector("[data-drawer-overlay]");
+const modal = document.querySelector("[data-demo-modal]");
+const orderModal = document.querySelector("[data-order-modal]");
+const sizeChartModal = document.querySelector("[data-size-chart-modal]");
+const modalOverlay = document.querySelector("[data-modal-overlay]");
+const toast = document.querySelector("[data-toast]");
+const cartItemsNode = document.querySelector("[data-cart-items]");
+const cartTotalNode = document.querySelector("[data-cart-total]");
+const checkoutButton = document.querySelector("[data-checkout]");
+const orderForm = document.querySelector("[data-order-form]");
+const orderSummary = document.querySelector("[data-order-summary]");
+const feedbackIcon = document.querySelector("[data-feedback-icon]");
+const feedbackKicker = document.querySelector("[data-feedback-kicker]");
+const feedbackTitle = document.querySelector("[data-feedback-title]");
+const feedbackCopy = document.querySelector("[data-feedback-copy]");
+const feedbackAction = document.querySelector("[data-feedback-action]");
+
+let toastTimer;
+
+function getEffectivePrice(product) {
   if (product.pricingMode === "sale" && product.salePrice) return product.salePrice;
   if (product.pricingMode === "member" && product.memberPrice) return product.memberPrice;
   return product.originalPrice;
-};
-const getEffectivePriceLabel = (product) => {
+}
+
+function getEffectivePriceLabel(product) {
   if (product.pricingMode === "sale" && product.salePrice) return "特價";
   if (product.pricingMode === "member" && product.memberPrice) return "會員價";
   return "";
-};
-const getPriceMeta = (product) => {
+}
+
+function getPriceMeta(product) {
   const bits = [];
   if (!product.memberPrice && !product.salePrice) return "";
   if (product.originalPrice) bits.push(`原價 HK$${product.originalPrice}`);
   if (product.memberPrice) bits.push(`會員 HK$${product.memberPrice}`);
   if (product.salePrice) bits.push(`特價 HK$${product.salePrice}`);
   return bits.join(" · ");
-};
-const drawer = document.querySelector("[data-cart-drawer]");
-const drawerOverlay = document.querySelector("[data-drawer-overlay]");
-const modal = document.querySelector("[data-demo-modal]");
-const sizeChartModal = document.querySelector("[data-size-chart-modal]");
-const modalOverlay = document.querySelector("[data-modal-overlay]");
-const toast = document.querySelector("[data-toast]");
-let toastTimer;
+}
 
 function showToast(message) {
   toast.textContent = message;
@@ -102,6 +119,7 @@ function closeCart() {
 }
 
 function getOpenModal() {
+  if (orderModal.classList.contains("is-open")) return orderModal;
   if (sizeChartModal.classList.contains("is-open")) return sizeChartModal;
   if (modal.classList.contains("is-open")) return modal;
   return null;
@@ -123,6 +141,14 @@ function closeModal(targetModal = getOpenModal()) {
     modalOverlay.classList.remove("is-open");
     lockPage(false);
   }
+}
+
+function setFeedbackModal({ icon = "OK", kicker, title, copy, action = "BACK TO STORE" }) {
+  feedbackIcon.textContent = icon;
+  feedbackKicker.textContent = kicker;
+  feedbackTitle.innerHTML = title;
+  feedbackCopy.textContent = copy;
+  feedbackAction.textContent = action;
 }
 
 function persistCart() {
@@ -197,63 +223,167 @@ function updateQuantity(index, delta) {
   persistCart();
 }
 
+function changeCartSize(index, size) {
+  const item = state.cart[index];
+  if (!item || !AVAILABLE_SIZES.includes(size) || item.size === size) return;
+
+  const duplicate = state.cart.find((entry, entryIndex) => (
+    entryIndex !== index && entry.productKey === item.productKey && entry.size === size
+  ));
+
+  if (duplicate) {
+    duplicate.quantity += item.quantity;
+    state.cart.splice(index, 1);
+  } else {
+    item.size = size;
+  }
+
+  persistCart();
+}
+
+function getCartPayload() {
+  return state.cart.map((item) => ({
+    sku: PRODUCTS[item.productKey].sku,
+    size: item.size,
+    quantity: item.quantity,
+  }));
+}
+
+function renderOrderSummary() {
+  const total = state.cart.reduce((sum, item) => sum + getEffectivePrice(PRODUCTS[item.productKey]) * item.quantity, 0);
+
+  if (!state.cart.length) {
+    orderSummary.innerHTML = `<div class="order-review__line"><span>購物袋而家未有商品。</span></div>`;
+    return;
+  }
+
+  orderSummary.innerHTML = [
+    ...state.cart.map((item) => {
+      const product = PRODUCTS[item.productKey];
+      return `
+        <div class="order-review__line">
+          <span>${product.name}<br />${product.colour} / SIZE ${item.size} × ${item.quantity}</span>
+          <strong>${formatMoney(getEffectivePrice(product) * item.quantity)}</strong>
+        </div>
+      `;
+    }),
+    `<div class="order-review__total"><span>ORDER TOTAL</span><strong>${formatMoney(total)}</strong></div>`,
+  ].join("");
+}
+
 function renderCart() {
   const count = state.cart.reduce((sum, item) => sum + item.quantity, 0);
   const total = state.cart.reduce((sum, item) => sum + getEffectivePrice(PRODUCTS[item.productKey]) * item.quantity, 0);
 
   document.querySelectorAll("[data-cart-count]").forEach((node) => { node.textContent = count; });
-  document.querySelector("[data-cart-total]").textContent = formatMoney(total);
-  document.querySelector("[data-checkout]").disabled = count === 0;
+  cartTotalNode.textContent = formatMoney(total);
+  checkoutButton.disabled = count === 0;
 
-  const itemsNode = document.querySelector("[data-cart-items]");
   if (!state.cart.length) {
-    itemsNode.innerHTML = `<div class="empty-bag"><span>00</span><h3>YOUR BAG IS EMPTY</h3><p>揀顏色同尺碼，建立你嘅比賽 loadout。</p></div>`;
+    cartItemsNode.innerHTML = `<div class="empty-bag"><span>00</span><h3>YOUR BAG IS EMPTY</h3><p>揀顏色同尺碼，建立你嘅比賽 loadout。</p></div>`;
+    renderOrderSummary();
     return;
   }
 
-  itemsNode.innerHTML = state.cart.map((item, index) => {
+  cartItemsNode.innerHTML = state.cart.map((item, index) => {
     const product = PRODUCTS[item.productKey];
+    const sizeOptions = AVAILABLE_SIZES.map((size) => (
+      `<option value="${size}" ${size === item.size ? "selected" : ""}>${size}</option>`
+    )).join("");
+
     return `
       <article class="cart-line">
         <img src="${product.images.front}" alt="${product.name}" />
         <div>
           <h3>${product.name}</h3>
-          <p>${product.colour} / SIZE ${item.size}</p>
-          <div class="qty-control" aria-label="商品數量">
-            <button type="button" data-qty="-1" data-index="${index}" aria-label="減少數量">−</button>
-            <span>${item.quantity}</span>
-            <button type="button" data-qty="1" data-index="${index}" aria-label="增加數量">＋</button>
+          <p>${product.colour}</p>
+          <div class="cart-line__controls">
+            <label class="cart-size-field">
+              <span>SIZE</span>
+              <select data-size-change data-index="${index}" aria-label="修改 ${product.name} 尺碼">
+                ${sizeOptions}
+              </select>
+            </label>
+            <div class="qty-control" aria-label="商品數量">
+              <button type="button" data-qty="-1" data-index="${index}" aria-label="減少數量">−</button>
+              <span>${item.quantity}</span>
+              <button type="button" data-qty="1" data-index="${index}" aria-label="增加數量">＋</button>
+            </div>
           </div>
           <strong>${formatMoney(getEffectivePrice(product) * item.quantity)}</strong>
         </div>
         <button type="button" class="cart-line__remove" data-remove data-index="${index}" aria-label="移除 ${product.name}">×</button>
-      </article>`;
+      </article>
+    `;
   }).join("");
+
+  renderOrderSummary();
 }
 
-async function beginCheckout() {
-  const button = document.querySelector("[data-checkout]");
+function openOrderModal() {
   if (!state.cart.length) return;
+  renderOrderSummary();
+  openModal(orderModal);
+}
+
+async function submitOrder(event) {
+  event.preventDefault();
+  if (!state.cart.length) {
+    closeModal(orderModal);
+    showToast("購物袋暫時未有商品");
+    return;
+  }
+
+  if (!orderForm.reportValidity()) return;
+
+  const button = orderForm.querySelector("[data-confirm-order]");
   const previous = button.innerHTML;
+  const formData = new FormData(orderForm);
+  const payload = {
+    customer: {
+      firstName: String(formData.get("firstName") || "").trim(),
+      lastName: String(formData.get("lastName") || "").trim(),
+      email: String(formData.get("email") || "").trim(),
+      phone: String(formData.get("phone") || "").trim(),
+    },
+    items: getCartPayload(),
+  };
+
   button.disabled = true;
-  button.innerHTML = "<span>CONNECTING TO STRIPE…</span><b>···</b>";
+  button.innerHTML = "<span>SENDING ORDER…</span><span>···</span>";
 
   try {
-    const response = await fetch("/api/create-checkout-session", {
+    const response = await fetch("/api/confirm-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items: state.cart.map((item) => ({ sku: PRODUCTS[item.productKey].sku, size: item.size, quantity: item.quantity })) }),
+      body: JSON.stringify(payload),
     });
+
     const data = await response.json().catch(() => null);
-    if (!response.ok) throw new Error(data?.error || "Stripe is not configured");
-    if (!data.url) throw new Error("Missing checkout URL");
-    window.location.assign(data.url);
+    if (!response.ok) throw new Error(data?.error || "未能確認訂單，請稍後再試。");
+
+    state.cart = [];
+    persistCart();
+    orderForm.reset();
+    closeModal(orderModal);
+
+    setFeedbackModal({
+      icon: "OK",
+      kicker: "ORDER CONFIRMED",
+      title: "ORDER<br />RECEIVED.",
+      copy: `我哋已收到你嘅訂單 ${data?.orderReference ? `（${data.orderReference}）` : ""}。團隊會根據你填寫嘅資料再聯絡你安排付款同確認。`,
+      action: "BACK TO STORE",
+    });
+    openModal(modal);
   } catch (error) {
-    if (error instanceof Error && !/stripe is not configured/i.test(error.message)) {
-      showToast(error.message);
-    } else {
-      openModal();
-    }
+    setFeedbackModal({
+      icon: "!",
+      kicker: "ORDER ISSUE",
+      title: "ORDER<br />NOT SENT.",
+      copy: error instanceof Error ? error.message : "未能確認訂單，請稍後再試。",
+      action: "TRY AGAIN",
+    });
+    openModal(modal);
   } finally {
     button.disabled = false;
     button.innerHTML = previous;
@@ -300,11 +430,14 @@ document.querySelectorAll("[data-close-cart]").forEach((button) => button.addEve
 document.querySelectorAll("[data-close-modal]").forEach((button) => button.addEventListener("click", () => closeModal()));
 drawerOverlay.addEventListener("click", closeCart);
 modalOverlay.addEventListener("click", () => closeModal());
-document.querySelector("[data-checkout]").addEventListener("click", beginCheckout);
+checkoutButton.addEventListener("click", openOrderModal);
+orderForm.addEventListener("submit", submitOrder);
 
-document.querySelector("[data-cart-items]").addEventListener("click", (event) => {
-  const qtyButton = event.target.closest("[data-qty]");
-  const removeButton = event.target.closest("[data-remove]");
+cartItemsNode.addEventListener("click", (event) => {
+  const target = event.target instanceof Element ? event.target : null;
+  if (!target) return;
+  const qtyButton = target.closest("[data-qty]");
+  const removeButton = target.closest("[data-remove]");
   if (qtyButton) updateQuantity(Number(qtyButton.dataset.index), Number(qtyButton.dataset.qty));
   if (removeButton) {
     state.cart.splice(Number(removeButton.dataset.index), 1);
@@ -312,18 +445,18 @@ document.querySelector("[data-cart-items]").addEventListener("click", (event) =>
   }
 });
 
+cartItemsNode.addEventListener("change", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLSelectElement)) return;
+  if (!target.matches("[data-size-change]")) return;
+  changeCartSize(Number(target.dataset.index), target.value);
+});
+
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
   if (getOpenModal()) closeModal();
   else if (drawer.classList.contains("is-open")) closeCart();
 });
-
-const params = new URLSearchParams(window.location.search);
-if (params.get("checkout") === "success") {
-  state.cart = [];
-  persistCart();
-  setTimeout(() => showToast("付款完成 / ORDER CONFIRMED"), 350);
-}
 
 updatePricingUI();
 loadCatalog();

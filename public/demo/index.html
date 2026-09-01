@@ -16,7 +16,7 @@
     <div class="noise" aria-hidden="true"></div>
     <div class="announcement">
       <span>DROP 001</span>
-      <span class="announcement__track">OFFICIAL MEMBER UTILITY SYSTEM — HONG KONG — STRIPE SECURE CHECKOUT</span>
+      <span class="announcement__track">OFFICIAL MEMBER UTILITY SYSTEM — HONG KONG — MANUAL ORDER CONFIRMATION</span>
     </div>
 
     <header class="site-header" id="top">
@@ -235,24 +235,63 @@
       </div>
       <div class="cart-drawer__summary">
         <div><span>SUBTOTAL</span><strong data-cart-total>HK$0</strong></div>
-        <p>Shipping and final total calculated securely at checkout.</p>
+        <p>確認訂單後，我哋會人手聯絡你安排付款。你可以先喺購物袋內修改數量同尺碼。</p>
         <button class="checkout-button" type="button" data-checkout>
-          <span>STRIPE SECURE CHECKOUT</span><b>→</b>
+          <span>CONFIRM ORDER DETAILS</span><b>→</b>
         </button>
-        <small>SECURE PAYMENT POWERED BY STRIPE</small>
+        <small>NO ONLINE PAYMENT · WHATSAPP FOLLOW-UP AFTER ORDER CONFIRMATION</small>
       </div>
     </aside>
 
     <div class="modal-overlay" data-modal-overlay></div>
     <section class="demo-modal" data-demo-modal role="dialog" aria-modal="true" aria-labelledby="demo-modal-title">
       <button type="button" class="demo-modal__close" data-close-modal aria-label="關閉">×</button>
-      <span class="demo-modal__icon">S</span>
-      <p>CHECKOUT STATUS</p>
-      <h2 id="demo-modal-title">CHECKOUT<br />NOT READY.</h2>
-      <p class="demo-modal__copy">
-        付款系統暫時未完成設定。請稍後再試，或者聯絡 BLADERS X LIVE TOURNAMENT HUB 團隊協助落單。
+      <span class="demo-modal__icon" data-feedback-icon">OK</span>
+      <p data-feedback-kicker>ORDER STATUS</p>
+      <h2 id="demo-modal-title" data-feedback-title>ORDER<br />READY.</h2>
+      <p class="demo-modal__copy" data-feedback-copy>
+        你完成訂單確認後，我哋會收到客人資料同商品資料，再由 admin 跟進付款狀態。
       </p>
-      <button type="button" class="button button--primary" data-close-modal>BACK TO STORE</button>
+      <button type="button" class="button button--primary" data-close-modal data-feedback-action>BACK TO STORE</button>
+    </section>
+
+    <section class="demo-modal demo-modal--order" data-order-modal role="dialog" aria-modal="true" aria-labelledby="order-modal-title">
+      <button type="button" class="demo-modal__close" data-close-modal aria-label="關閉">×</button>
+      <p>ORDER CHECKPOINT</p>
+      <h2 id="order-modal-title">CONFIRM<br />YOUR ORDER.</h2>
+      <p class="demo-modal__copy">
+        請填好聯絡資料。你按 Confirm 之後，我哋後台會收到訂單，再由團隊個別 WhatsApp 你安排付款。
+      </p>
+
+      <div class="order-review" data-order-summary></div>
+
+      <form class="order-form" data-order-form>
+        <div class="order-form__grid">
+          <label class="order-field">
+            <span>FIRST NAME</span>
+            <input type="text" name="firstName" autocomplete="given-name" required />
+          </label>
+
+          <label class="order-field">
+            <span>LAST NAME</span>
+            <input type="text" name="lastName" autocomplete="family-name" required />
+          </label>
+
+          <label class="order-field order-field--full">
+            <span>EMAIL</span>
+            <input type="email" name="email" autocomplete="email" required />
+          </label>
+
+          <label class="order-field order-field--full">
+            <span>PHONE NUMBER</span>
+            <input type="tel" name="phone" autocomplete="tel" required />
+          </label>
+        </div>
+
+        <button class="button button--primary order-form__submit" type="submit" data-confirm-order>
+          <span>CONFIRM ORDER</span><span>→</span>
+        </button>
+      </form>
     </section>
 
     <section class="demo-modal demo-modal--size-chart" data-size-chart-modal role="dialog" aria-modal="true" aria-labelledby="size-chart-modal-title">

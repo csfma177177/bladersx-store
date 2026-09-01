@@ -28,8 +28,9 @@ test("keeps production storefront assets in place", async () => {
   ]);
 
   assert.match(html, /OFFICIAL ONLINE STORE/);
-  assert.match(html, /SECURE PAYMENT POWERED BY STRIPE/);
-  assert.match(app, /ORDER CONFIRMED/);
+  assert.match(html, /CONFIRM ORDER DETAILS/);
+  assert.match(app, /ORDER<br \/>RECEIVED\./);
+  assert.doesNotMatch(html, /STRIPE/i);
   assert.doesNotMatch(html, /DEMO MODE|DEMONSTRATION STORE|示範價/);
   assert.doesNotMatch(app, /付款測試/);
 });

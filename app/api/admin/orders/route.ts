@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { hasAdminSession } from "@/lib/admin-auth";
-import { updateOrderAdmin } from "@/lib/supabase-admin";
+import { applyPaidOrderInventory, getOrderById, updateOrderAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 
@@ -17,7 +17,47 @@ export async function POST(request: Request) {
   const requestedStatus = String(formData.get("fulfillmentStatus") ?? "pending");
   const fulfillmentStatus = allowedFulfillmentStatuses.has(requestedStatus) ? requestedStatus : "pending";
   const adminNotes = String(formData.get("adminNotes") ?? "").trim();
+  const markPaid = formData.get("markPaid") === "true";
 
-  await updateOrderAdmin({ id, fulfillmentStatus, adminNotes });
+  const existingOrder = await getOrderById(id);
+  if (!existingOrder) {
+    return NextResponse.redirect(new URL("/admin?status=order-missing", url.origin), { status: 303 });
+  }
+
+  const nextPaymentStatus = markPaid ? "paid" : existingOrder.status;
+
+  await updateOrderAdmin({
+    id,
+    fulfillmentStatus,
+    adminNotes,
+    paymentStatus: nextPaymentStatus,
+    paidAt: nextPaymentStatus === "paid" && existingOrder.status !== "paid" ? new Date().toISOString() : existingOrder.paid_at,
+  });
+
+  if (existingOrder.status !== "paid" && nextPaymentStatus === "paid" && Array.isArray(existingOrder.items)) {
+    await applyPaidOrderInventory(
+      existingOrder.items
+        .map((item) => {
+          if (!item || typeof item !== "object") return null;
+          const entry = item as { sku?: string; size?: string; quantity?: number };
+          if (
+            (entry.sku !== "BX-MUT-01" && entry.sku !== "BX-MUT-02")
+            || !entry.size
+            || typeof entry.quantity !== "number"
+            || entry.quantity <= 0
+          ) {
+            return null;
+          }
+
+          return {
+            sku: entry.sku,
+            size: entry.size as "S" | "M" | "L" | "XL" | "2XL",
+            quantity: entry.quantity,
+          };
+        })
+        .filter((item): item is { sku: "BX-MUT-01" | "BX-MUT-02"; size: "S" | "M" | "L" | "XL" | "2XL"; quantity: number } => Boolean(item)),
+    );
+  }
+
   return NextResponse.redirect(new URL("/admin?status=order-saved", url.origin), { status: 303 });
 }

@@ -54,6 +54,21 @@ export type OrderRow = {
   created_at: string;
 };
 
+export type OrderInsert = {
+  stripe_session_id: string;
+  client_reference_id: string;
+  status: string;
+  currency: string;
+  amount_total: number | null;
+  customer_email: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  items: Json;
+  checkout_url?: string | null;
+  admin_notes?: string | null;
+  paid_at?: string | null;
+};
+
 export const SKU_TO_PRODUCT_KEY: Record<ProductSku, ProductKey> = {
   "BX-MUT-01": "black",
   "BX-MUT-02": "navy",
@@ -189,6 +204,14 @@ export async function listOrders(limit = 50) {
   );
 }
 
+export async function getOrderById(id: string) {
+  const rows = await supabaseFetch<OrderRow[]>(
+    `/rest/v1/orders?select=id,stripe_session_id,client_reference_id,status,fulfillment_status,currency,amount_total,customer_email,customer_name,customer_phone,items,admin_notes,paid_at,created_at&id=eq.${encodeFilter(id)}&limit=1`,
+  );
+
+  return rows[0] ?? null;
+}
+
 function encodeFilter(value: string) {
   return encodeURIComponent(value);
 }
@@ -244,18 +267,35 @@ export async function updateProductPricing(input: {
   });
 }
 
+export async function createOrder(input: OrderInsert) {
+  return supabaseFetch<null>("/rest/v1/orders", {
+    method: "POST",
+    headers: { prefer: "return=minimal" },
+    body: JSON.stringify(input),
+  });
+}
+
 export async function updateOrderAdmin(input: {
   id: string;
   fulfillmentStatus: string;
   adminNotes: string;
+  paymentStatus?: string;
+  paidAt?: string | null;
 }) {
+  const body: Record<string, unknown> = {
+    fulfillment_status: input.fulfillmentStatus,
+    admin_notes: input.adminNotes || null,
+  };
+
+  if (input.paymentStatus) {
+    body.status = input.paymentStatus;
+    body.paid_at = input.paymentStatus === "paid" ? (input.paidAt ?? new Date().toISOString()) : null;
+  }
+
   return supabaseFetch<null>(`/rest/v1/orders?id=eq.${encodeFilter(input.id)}`, {
     method: "PATCH",
     headers: { prefer: "return=minimal" },
-    body: JSON.stringify({
-      fulfillment_status: input.fulfillmentStatus,
-      admin_notes: input.adminNotes || null,
-    }),
+    body: JSON.stringify(body),
   });
 }
 
