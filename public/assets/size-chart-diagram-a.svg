@@ -1,0 +1,13 @@
+<svg width="560" height="460" viewBox="0 0 560 460" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="560" height="460" fill="#090D1B"/>
+  <path d="M168 80L220 56H340L392 80L440 144L408 172V376H152V172L120 144L168 80Z" stroke="#D9DEEA" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M222 56C258 88 302 88 338 56" stroke="#D9DEEA" stroke-width="6" stroke-linecap="round"/>
+  <path d="M152 172L96 236" stroke="#D9DEEA" stroke-width="6" stroke-linecap="round"/>
+  <path d="M408 172L464 236" stroke="#D9DEEA" stroke-width="6" stroke-linecap="round"/>
+  <path d="M116 146L84 218" stroke="#D9DEEA" stroke-width="6" stroke-linecap="round"/>
+  <path d="M444 146L476 218" stroke="#D9DEEA" stroke-width="6" stroke-linecap="round"/>
+  <line x1="202" y1="236" x2="358" y2="236" stroke="#59D6FF" stroke-width="8" stroke-linecap="round"/>
+  <polygon points="202,236 220,224 220,248" fill="#59D6FF"/>
+  <polygon points="358,236 340,224 340,248" fill="#59D6FF"/>
+  <text x="280" y="208" text-anchor="middle" fill="#59D6FF" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="700">A</text>
+</svg>

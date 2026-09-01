@@ -236,7 +236,8 @@
   .size-chart-visuals { display: grid; gap: 18px; }
   .size-diagram-card { padding: 18px; color: #d9deea; }
   .size-diagram-card h3 { color: var(--ink); font: 900 20px/1 var(--font-wide); letter-spacing: .02em; }
-  .size-diagram-card svg { width: 100%; margin-top: 14px; color: rgba(229,234,244,.78); }
+  .size-diagram-card svg,
+  .size-diagram-card img { width: 100%; margin-top: 14px; display: block; color: rgba(229,234,244,.78); }
   .size-diagram-card p { margin-top: 10px; color: var(--muted); font-size: 11px; line-height: 1.65; }
 
   .system-section { position: relative; display: grid; grid-template-columns: .65fr 1.35fr; gap: 5vw; background: #070912; }
