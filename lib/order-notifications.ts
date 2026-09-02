@@ -33,14 +33,16 @@ type CustomerOrderConfirmationInput = {
 };
 
 type ResendEmailInput = {
+  from?: string;
   to: string;
   subject: string;
   text: string;
   html: string;
 };
 
-const defaultNotificationEmail = "cs@bladerxstore.com";
+const defaultOrderNotificationEmail = "cs@fma-hk.com";
 const defaultFromEmail = "BLADERS X Store <onboarding@resend.dev>";
+const defaultCustomerConfirmationFromEmail = "BLADERS X Store <cs@bladerxstore.com>";
 const orderCutOffMessage = "今次預訂將於 2026年9月6日截單後處理，預計約兩星期左右到貨。";
 
 function moneyFromCents(cents: number) {
@@ -168,14 +170,14 @@ async function sendResendEmail(input: ResendEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return { skipped: true };
 
-  const from = process.env.ORDER_NOTIFICATION_FROM || defaultFromEmail;
+  const from = input.from || process.env.ORDER_NOTIFICATION_FROM || defaultFromEmail;
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ from, ...input }),
+    body: JSON.stringify({ ...input, from }),
   });
 
   if (!response.ok) {
@@ -187,7 +189,7 @@ async function sendResendEmail(input: ResendEmailInput) {
 }
 
 export async function sendOrderNotification(input: OrderNotificationInput) {
-  const to = process.env.ORDER_NOTIFICATION_EMAIL || defaultNotificationEmail;
+  const to = process.env.ORDER_NOTIFICATION_EMAIL || defaultOrderNotificationEmail;
   const customerName = `${input.customer.firstName} ${input.customer.lastName}`;
 
   return sendResendEmail({
@@ -218,6 +220,7 @@ export async function sendCustomerOrderConfirmation(input: CustomerOrderConfirma
   }
 
   return sendResendEmail({
+    from: process.env.CUSTOMER_CONFIRMATION_FROM || defaultCustomerConfirmationFromEmail,
     to: customerEmail,
     subject: `[BLADERS X] Order confirmed ${input.orderReference}`,
     text: [
