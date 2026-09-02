@@ -263,35 +263,53 @@
         請填好聯絡資料。你按 Confirm 之後，我哋後台會收到訂單，再由團隊個別 WhatsApp 你安排付款。
       </p>
 
-      <div class="order-review" data-order-summary></div>
+      <div data-order-entry>
+        <div class="order-review" data-order-summary></div>
 
-      <form class="order-form" data-order-form>
-        <div class="order-form__grid">
-          <label class="order-field">
-            <span>FIRST NAME</span>
-            <input type="text" name="firstName" autocomplete="given-name" required />
-          </label>
+        <form class="order-form" data-order-form>
+          <div class="order-form__grid">
+            <label class="order-field">
+              <span>FIRST NAME</span>
+              <input type="text" name="firstName" autocomplete="given-name" required />
+            </label>
 
-          <label class="order-field">
-            <span>LAST NAME</span>
-            <input type="text" name="lastName" autocomplete="family-name" required />
-          </label>
+            <label class="order-field">
+              <span>LAST NAME</span>
+              <input type="text" name="lastName" autocomplete="family-name" required />
+            </label>
 
-          <label class="order-field order-field--full">
-            <span>EMAIL</span>
-            <input type="email" name="email" autocomplete="email" required />
-          </label>
+            <label class="order-field order-field--full">
+              <span>EMAIL</span>
+              <input type="email" name="email" autocomplete="email" required />
+            </label>
 
-          <label class="order-field order-field--full">
-            <span>PHONE NUMBER</span>
-            <input type="tel" name="phone" autocomplete="tel" required />
-          </label>
+            <label class="order-field order-field--full">
+              <span>PHONE NUMBER</span>
+              <input type="tel" name="phone" autocomplete="tel" required />
+            </label>
+          </div>
+
+          <p class="order-form__error" data-order-error role="alert" hidden></p>
+
+          <button class="button button--primary order-form__submit" type="submit" data-confirm-order>
+            <span>CONFIRM ORDER</span><span>→</span>
+          </button>
+        </form>
+      </div>
+
+      <div class="order-success" data-order-success hidden>
+        <span class="order-success__icon">OK</span>
+        <p>ORDER CONFIRMED</p>
+        <h3>ORDER<br />RECEIVED.</h3>
+        <div class="order-success__reference">
+          <span>REFERENCE</span>
+          <strong data-order-reference>BX-ORDER</strong>
         </div>
-
-        <button class="button button--primary order-form__submit" type="submit" data-confirm-order>
-          <span>CONFIRM ORDER</span><span>→</span>
-        </button>
-      </form>
+        <p>
+          我哋已經收到你嘅訂單。團隊會根據你填寫嘅資料，再個別 WhatsApp 你安排付款同確認。
+        </p>
+        <button type="button" class="button button--primary" data-close-modal>BACK TO STORE</button>
+      </div>
     </section>
 
     <section class="demo-modal demo-modal--size-chart" data-size-chart-modal role="dialog" aria-modal="true" aria-labelledby="size-chart-modal-title">

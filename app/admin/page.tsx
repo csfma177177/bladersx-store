@@ -97,6 +97,8 @@ function getBanner(status: string | undefined) {
   if (status === "inventory-saved") return "庫存已更新。";
   if (status === "order-saved") return "訂單資料已更新。";
   if (status === "order-missing") return "搵唔返該張訂單，可能已被移除。";
+  if (status === "order-deleted") return "訂單已刪除。";
+  if (status === "delete-not-confirmed") return "刪除訂單前要先 tick 確認。";
   if (status === "pricing-saved") return "產品定價已更新。";
   return null;
 }
@@ -469,6 +471,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
                           <form className={styles.orderUpdateForm} action="/api/admin/orders" method="post">
                             <input type="hidden" name="id" value={order.id} />
+                            <input type="hidden" name="intent" value="update" />
 
                             <label className={styles.field}>
                               Fulfillment 狀態
@@ -505,6 +508,18 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
                             <button className={styles.save} type="submit">
                               更新訂單
+                            </button>
+                          </form>
+
+                          <form className={styles.deleteOrderForm} action="/api/admin/orders" method="post">
+                            <input type="hidden" name="id" value={order.id} />
+                            <input type="hidden" name="intent" value="delete" />
+                            <label className={styles.checkboxRow}>
+                              <input type="checkbox" name="confirmDelete" value="true" required />
+                              我確認要刪除呢張訂單
+                            </label>
+                            <button className={styles.deleteButton} type="submit">
+                              刪除訂單
                             </button>
                           </form>
                         </article>

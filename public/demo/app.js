@@ -63,6 +63,10 @@ const cartTotalNode = document.querySelector("[data-cart-total]");
 const checkoutButton = document.querySelector("[data-checkout]");
 const orderForm = document.querySelector("[data-order-form]");
 const orderSummary = document.querySelector("[data-order-summary]");
+const orderEntry = document.querySelector("[data-order-entry]");
+const orderSuccess = document.querySelector("[data-order-success]");
+const orderReference = document.querySelector("[data-order-reference]");
+const orderError = document.querySelector("[data-order-error]");
 const feedbackIcon = document.querySelector("[data-feedback-icon]");
 const feedbackKicker = document.querySelector("[data-feedback-kicker]");
 const feedbackTitle = document.querySelector("[data-feedback-title]");
@@ -159,6 +163,36 @@ function showFeedbackModal(config, sourceModal = null) {
   modalOverlay.classList.add("is-open");
   lockPage(true);
   modal.querySelector("[data-close-modal]").focus();
+}
+
+function clearOrderError() {
+  if (!orderError) return;
+  orderError.hidden = true;
+  orderError.textContent = "";
+}
+
+function showOrderError(message) {
+  if (!orderError) return;
+  orderError.textContent = message;
+  orderError.hidden = false;
+}
+
+function resetOrderModalView() {
+  clearOrderError();
+  if (orderEntry) orderEntry.hidden = false;
+  if (orderSuccess) orderSuccess.hidden = true;
+}
+
+function showOrderSuccess(reference) {
+  clearOrderError();
+  if (orderReference) orderReference.textContent = reference || "BX-ORDER";
+  if (orderEntry) orderEntry.hidden = true;
+  if (orderSuccess) orderSuccess.hidden = false;
+  orderModal.classList.add("is-open");
+  modalOverlay.classList.add("is-open");
+  lockPage(true);
+  orderSuccess?.querySelector("[data-close-modal]")?.focus();
+  showToast("訂單已收到，我哋會盡快 WhatsApp 你");
 }
 
 function persistCart() {
@@ -332,6 +366,7 @@ function renderCart() {
 
 function openOrderModal() {
   if (!state.cart.length) return;
+  resetOrderModalView();
   renderOrderSummary();
   openModal(orderModal);
 }
@@ -361,6 +396,7 @@ async function submitOrder(event) {
 
   button.disabled = true;
   button.innerHTML = "<span>SENDING ORDER…</span><span>···</span>";
+  clearOrderError();
 
   try {
     const response = await fetch("/api/confirm-order", {
@@ -375,22 +411,9 @@ async function submitOrder(event) {
     state.cart = [];
     persistCart();
     orderForm.reset();
-
-    showFeedbackModal({
-      icon: "OK",
-      kicker: "ORDER CONFIRMED",
-      title: "ORDER<br />RECEIVED.",
-      copy: `我哋已收到你嘅訂單 ${data?.orderReference ? `（${data.orderReference}）` : ""}。團隊會根據你填寫嘅資料再聯絡你安排付款同確認。`,
-      action: "BACK TO STORE",
-    }, orderModal);
+    showOrderSuccess(data?.orderReference);
   } catch (error) {
-    showFeedbackModal({
-      icon: "!",
-      kicker: "ORDER ISSUE",
-      title: "ORDER<br />NOT SENT.",
-      copy: error instanceof Error ? error.message : "未能確認訂單，請稍後再試。",
-      action: "TRY AGAIN",
-    }, orderModal);
+    showOrderError(error instanceof Error ? error.message : "未能確認訂單，請稍後再試。");
   } finally {
     button.disabled = false;
     button.innerHTML = previous;

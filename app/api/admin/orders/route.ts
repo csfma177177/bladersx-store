@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { hasAdminSession } from "@/lib/admin-auth";
-import { applyPaidOrderInventory, getOrderById, updateOrderAdmin } from "@/lib/supabase-admin";
+import { applyPaidOrderInventory, deleteOrderById, getOrderById, updateOrderAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 
@@ -14,6 +14,7 @@ export async function POST(request: Request) {
 
   const formData = await request.formData();
   const id = String(formData.get("id") ?? "");
+  const intent = String(formData.get("intent") ?? "update");
   const requestedStatus = String(formData.get("fulfillmentStatus") ?? "pending");
   const fulfillmentStatus = allowedFulfillmentStatuses.has(requestedStatus) ? requestedStatus : "pending";
   const adminNotes = String(formData.get("adminNotes") ?? "").trim();
@@ -22,6 +23,15 @@ export async function POST(request: Request) {
   const existingOrder = await getOrderById(id);
   if (!existingOrder) {
     return NextResponse.redirect(new URL("/admin?status=order-missing", url.origin), { status: 303 });
+  }
+
+  if (intent === "delete") {
+    if (formData.get("confirmDelete") !== "true") {
+      return NextResponse.redirect(new URL("/admin?status=delete-not-confirmed", url.origin), { status: 303 });
+    }
+
+    await deleteOrderById(id);
+    return NextResponse.redirect(new URL("/admin?status=order-deleted", url.origin), { status: 303 });
   }
 
   const nextPaymentStatus = markPaid ? "paid" : existingOrder.status;

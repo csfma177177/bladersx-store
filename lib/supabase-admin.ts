@@ -303,6 +303,13 @@ export async function updateOrderAdmin(input: {
   });
 }
 
+export async function deleteOrderById(id: string) {
+  return supabaseFetch<null>(`/rest/v1/orders?id=eq.${encodeFilter(id)}`, {
+    method: "DELETE",
+    headers: { prefer: "return=minimal" },
+  });
+}
+
 export async function loadInventorySnapshot(items: InventoryItem[]) {
   if (!isSupabaseConfigured() || items.length === 0) return null;
 
