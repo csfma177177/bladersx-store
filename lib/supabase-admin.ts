@@ -278,6 +278,7 @@ export async function updateOrderAdmin(input: {
   id: string;
   fulfillmentStatus: string;
   adminNotes: string;
+  amountTotal?: number;
   paymentStatus?: string;
   paidAt?: string | null;
 }) {
@@ -285,6 +286,10 @@ export async function updateOrderAdmin(input: {
     fulfillment_status: input.fulfillmentStatus,
     admin_notes: input.adminNotes || null,
   };
+
+  if (input.amountTotal !== undefined) {
+    body.amount_total = Math.max(0, input.amountTotal);
+  }
 
   if (input.paymentStatus) {
     body.status = input.paymentStatus;

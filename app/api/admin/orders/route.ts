@@ -7,6 +7,16 @@ export const runtime = "nodejs";
 
 const allowedFulfillmentStatuses = new Set(["pending", "processing", "shipped", "completed"]);
 
+function parseAmountTotalHkd(value: FormDataEntryValue | null) {
+  const rawValue = String(value ?? "").trim();
+  if (!rawValue) return null;
+
+  const amountHkd = Number(rawValue);
+  if (!Number.isFinite(amountHkd) || amountHkd < 0) return null;
+
+  return Math.round(amountHkd * 100);
+}
+
 function normaliseNotificationItems(items: unknown): OrderNotificationItem[] {
   if (!Array.isArray(items)) return [];
 
@@ -46,6 +56,7 @@ export async function POST(request: Request) {
   const requestedStatus = String(formData.get("fulfillmentStatus") ?? "pending");
   const fulfillmentStatus = allowedFulfillmentStatuses.has(requestedStatus) ? requestedStatus : "pending";
   const adminNotes = String(formData.get("adminNotes") ?? "").trim();
+  const amountTotal = parseAmountTotalHkd(formData.get("amountTotalHkd"));
   const markPaid = formData.get("markPaid") === "true";
 
   const existingOrder = await getOrderById(id);
@@ -91,12 +102,17 @@ export async function POST(request: Request) {
     return NextResponse.redirect(new URL("/admin?status=customer-email-sent", url.origin), { status: 303 });
   }
 
+  if (intent === "update" && amountTotal == null) {
+    return NextResponse.redirect(new URL("/admin?status=order-amount-invalid", url.origin), { status: 303 });
+  }
+
   const nextPaymentStatus = markPaid ? "paid" : existingOrder.status;
 
   await updateOrderAdmin({
     id,
     fulfillmentStatus,
     adminNotes,
+    amountTotal: amountTotal ?? undefined,
     paymentStatus: nextPaymentStatus,
     paidAt: nextPaymentStatus === "paid" && existingOrder.status !== "paid" ? new Date().toISOString() : existingOrder.paid_at,
   });

@@ -35,6 +35,12 @@ function money(value: number | null) {
   return `HK$${(value / 100).toLocaleString("en-HK")}`;
 }
 
+function amountHkd(value: number | null) {
+  if (value == null) return "";
+  const hkd = value / 100;
+  return Number.isInteger(hkd) ? String(hkd) : hkd.toFixed(2);
+}
+
 function formatDate(value: string | null) {
   if (!value) return "—";
   return new Intl.DateTimeFormat("zh-HK", {
@@ -100,6 +106,7 @@ function getBanner(status: string | undefined) {
   if (status === "order-deleted") return "訂單已刪除。";
   if (status === "delete-not-confirmed") return "刪除訂單前要先 tick 確認。";
   if (status === "pricing-saved") return "產品定價已更新。";
+  if (status === "order-amount-invalid") return "訂單金額格式唔啱，請輸入 0 或以上嘅 HKD 金額。";
   if (status === "customer-email-sent") return "確認訂單 email 已發送俾客人。";
   if (status === "customer-email-missing") return "呢張訂單未有客人 email，未能發送確認訂單。";
   if (status === "customer-email-failed") return "確認訂單 email 發送失敗，請檢查 email 設定或稍後再試。";
@@ -487,6 +494,19 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                           <form className={styles.orderUpdateForm} action="/api/admin/orders" method="post">
                             <input type="hidden" name="id" value={order.id} />
                             <input type="hidden" name="intent" value="update" />
+
+                            <label className={styles.field}>
+                              Order amount（HKD）
+                              <input
+                                className={styles.input}
+                                type="number"
+                                name="amountTotalHkd"
+                                min="0"
+                                step="0.01"
+                                defaultValue={amountHkd(order.amount_total)}
+                                required
+                              />
+                            </label>
 
                             <label className={styles.field}>
                               Fulfillment 狀態
