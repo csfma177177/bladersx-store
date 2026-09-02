@@ -401,7 +401,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                         </div>
 
                         <div className={styles.statusPills}>
-                          <span className={styles.pill}>{paymentStatusLabel(order.status)}</span>
+                          <span className={`${styles.pill} ${order.status === "paid" ? styles.pillPaid : ""}`}>
+                            {paymentStatusLabel(order.status)}
+                          </span>
                           <span className={styles.pill}>{fulfillmentStatusLabel(order.fulfillment_status)}</span>
                         </div>
                       </div>
