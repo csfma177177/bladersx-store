@@ -48,7 +48,7 @@ async function createCheckoutSession(request: Request, env: Env): Promise<Respon
     "BX-MUT-01": env.STRIPE_PRICE_BLACK,
     "BX-MUT-02": env.STRIPE_PRICE_NAVY,
   };
-  const allowedSizes = new Set(["S", "M", "L", "XL", "2XL"]);
+  const allowedSizes = new Set(["S", "M", "L", "XL", "2XL", "3XL"]);
   const params = new URLSearchParams();
   const origin = new URL(request.url).origin;
 

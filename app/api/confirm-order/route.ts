@@ -25,7 +25,7 @@ type OrderPayload = {
   items?: unknown;
 };
 
-const allowedSizes = new Set(["S", "M", "L", "XL", "2XL"]);
+const allowedSizes = new Set(["S", "M", "L", "XL", "2XL", "3XL"]);
 
 export const runtime = "nodejs";
 

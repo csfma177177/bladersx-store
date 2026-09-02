@@ -12,7 +12,7 @@ export type PricingMode = "original" | "member" | "sale";
 
 export type InventoryItem = {
   sku: ProductSku;
-  size: "S" | "M" | "L" | "XL" | "2XL";
+  size: "S" | "M" | "L" | "XL" | "2XL" | "3XL";
   quantity: number;
 };
 

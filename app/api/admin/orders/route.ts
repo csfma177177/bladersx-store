@@ -61,11 +61,11 @@ export async function POST(request: Request) {
 
           return {
             sku: entry.sku,
-            size: entry.size as "S" | "M" | "L" | "XL" | "2XL",
+            size: entry.size as "S" | "M" | "L" | "XL" | "2XL" | "3XL",
             quantity: entry.quantity,
           };
         })
-        .filter((item): item is { sku: "BX-MUT-01" | "BX-MUT-02"; size: "S" | "M" | "L" | "XL" | "2XL"; quantity: number } => Boolean(item)),
+        .filter((item): item is { sku: "BX-MUT-01" | "BX-MUT-02"; size: "S" | "M" | "L" | "XL" | "2XL" | "3XL"; quantity: number } => Boolean(item)),
     );
   }
 

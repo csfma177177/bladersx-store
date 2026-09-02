@@ -36,7 +36,7 @@ create table if not exists public.orders (
 
 create table if not exists public.product_variants (
   sku text not null references public.products (sku) on delete cascade,
-  size text not null check (size in ('S', 'M', 'L', 'XL', '2XL')),
+  size text not null check (size in ('S', 'M', 'L', 'XL', '2XL', '3XL')),
   stock_quantity integer not null default 0 check (stock_quantity >= 0),
   active boolean not null default true,
   created_at timestamptz not null default now(),
@@ -116,6 +116,13 @@ alter table public.product_variants
 alter table public.product_variants
   add column if not exists updated_at timestamptz not null default now();
 
+alter table public.product_variants
+  drop constraint if exists product_variants_size_check;
+
+alter table public.product_variants
+  add constraint product_variants_size_check
+  check (size in ('S', 'M', 'L', 'XL', '2XL', '3XL'));
+
 insert into public.products (sku, name, colour, price_hkd, original_price_hkd, member_price_hkd, sale_price_hkd, pricing_mode)
 values
   ('BX-MUT-01', 'Utility Tee - Charcoal Grey', 'Charcoal Grey', 498, 498, 498, null, 'member'),
@@ -128,7 +135,7 @@ on conflict (sku) do update set
 insert into public.product_variants (sku, size, stock_quantity, active)
 select products.sku, sizes.size, 0, true
 from public.products as products
-cross join (values ('S'), ('M'), ('L'), ('XL'), ('2XL')) as sizes(size)
+cross join (values ('S'), ('M'), ('L'), ('XL'), ('2XL'), ('3XL')) as sizes(size)
 on conflict (sku, size) do nothing;
 
 create index if not exists orders_status_idx on public.orders (status);
@@ -193,15 +200,15 @@ set
   original_price_hkd = coalesce(original_price_hkd, price_hkd),
   price_hkd = coalesce(
     case
-      when pricing_mode = 'sale' and sale_price_hkd is not null and sale_price_hkd > 0 then sale_price_hkd
-      when pricing_mode = 'member' and member_price_hkd is not null and member_price_hkd > 0 then member_price_hkd
+      when sale_price_hkd is not null and sale_price_hkd > 0 then sale_price_hkd
+      when member_price_hkd is not null and member_price_hkd > 0 then member_price_hkd
       else original_price_hkd
     end,
     price_hkd
   ),
   pricing_mode = case
-    when pricing_mode = 'sale' and sale_price_hkd is not null and sale_price_hkd > 0 then 'sale'
-    when pricing_mode = 'member' and member_price_hkd is not null and member_price_hkd > 0 then 'member'
+    when sale_price_hkd is not null and sale_price_hkd > 0 then 'sale'
+    when member_price_hkd is not null and member_price_hkd > 0 then 'member'
     else 'original'
   end
 where true;
