@@ -33,7 +33,14 @@ Use these Vercel environment variables:
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_server_side_service_role_key
 ADMIN_ACCESS_TOKEN=your_long_random_admin_token
+RESEND_API_KEY=re_your_resend_api_key
+ORDER_NOTIFICATION_EMAIL=cs@fma-hk.com
+ORDER_NOTIFICATION_FROM=BLADERS X Store <orders@your-verified-domain.com>
 ```
+
+`RESEND_API_KEY` enables new-order email notifications. If it is not set,
+orders still save normally, but no email will be sent. For production, verify
+your sending domain in Resend and use that domain in `ORDER_NOTIFICATION_FROM`.
 
 ## 3. Stripe
 

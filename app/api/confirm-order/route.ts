@@ -8,6 +8,7 @@ import {
   type InventoryItem,
   type ProductRow,
 } from "@/lib/supabase-admin";
+import { sendOrderNotification } from "@/lib/order-notifications";
 
 type OrderItem = {
   sku: "BX-MUT-01" | "BX-MUT-02";
@@ -124,6 +125,12 @@ export async function POST(request: Request) {
     (sum, item) => sum + getEffectivePriceHkd(catalogue[item.sku]) * 100 * item.quantity,
     0,
   );
+  const orderItems = items.map((item) => ({
+    ...item,
+    product_name: catalogue[item.sku].name,
+    colour: catalogue[item.sku].colour,
+    unit_price_hkd: getEffectivePriceHkd(catalogue[item.sku]),
+  }));
 
   try {
     await createOrder({
@@ -135,18 +142,24 @@ export async function POST(request: Request) {
       customer_email: customer.email,
       customer_name: `${customer.firstName} ${customer.lastName}`,
       customer_phone: customer.phone,
-      items: items.map((item) => ({
-        ...item,
-        product_name: catalogue[item.sku].name,
-        colour: catalogue[item.sku].colour,
-        unit_price_hkd: getEffectivePriceHkd(catalogue[item.sku]),
-      })),
+      items: orderItems,
       checkout_url: null,
       admin_notes: "Manual payment follow-up required.",
       paid_at: null,
     });
   } catch {
     return json({ error: "訂單已填好，但系統暫時未能儲存。請稍後再試，或者直接聯絡 admin。"}, 500);
+  }
+
+  try {
+    await sendOrderNotification({
+      orderReference,
+      customer,
+      items: orderItems,
+      amountTotal,
+    });
+  } catch (error) {
+    console.error(error);
   }
 
   return json({
