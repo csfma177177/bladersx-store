@@ -39,7 +39,7 @@ type ResendEmailInput = {
   html: string;
 };
 
-const defaultNotificationEmail = "cs@fma-hk.com";
+const defaultNotificationEmail = "cs@bladerxstore.com";
 const defaultFromEmail = "BLADERS X Store <onboarding@resend.dev>";
 const orderCutOffMessage = "今次預訂將於 2026年9月6日截單後處理，預計約兩星期左右到貨。";
 

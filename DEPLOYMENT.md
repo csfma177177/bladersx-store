@@ -34,7 +34,7 @@ SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_server_side_service_role_key
 ADMIN_ACCESS_TOKEN=your_long_random_admin_token
 RESEND_API_KEY=re_your_resend_api_key
-ORDER_NOTIFICATION_EMAIL=cs@fma-hk.com
+ORDER_NOTIFICATION_EMAIL=cs@bladerxstore.com
 ORDER_NOTIFICATION_FROM=BLADERS X Store <orders@your-verified-domain.com>
 ```
 
