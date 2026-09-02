@@ -268,6 +268,7 @@
   .spec-grid p { margin-top: 18px; color: var(--muted); font-size: 11px; line-height: 1.65; }
 
   .culture-section { min-height: 640px; display: grid; grid-template-columns: 1fr 1.2fr; align-items: center; gap: 8vw; padding: 100px 8vw; overflow: hidden; background: linear-gradient(120deg, #b9c0ce 0%, #ecedef 54%, #c9ced8 100%); color: #0b0e17; }
+  .culture-section > div { min-width: 0; }
   .culture-section__code {
     position: relative;
     display: flex;
@@ -575,11 +576,64 @@
     .spec-grid { grid-template-columns: 1fr; }
     .spec-grid article { border-right: 0; border-bottom: 1px solid var(--line); }
     .spec-grid article:last-child { border-bottom: 0; }
-    .culture-section { grid-template-columns: 1fr; gap: 90px; padding: 80px 18px; }
-    .culture-section__code { font-size: 22vw; line-height: .9; transform: none; }
-    .culture-section__live { margin-left: .12em; }
-    .culture-section__line--two { margin-left: .38em; }
-    .culture-section__line--three { margin-left: .82em; }
+    .culture-section {
+      grid-template-columns: 1fr;
+      gap: 84px;
+      padding: 72px 18px 84px;
+      overflow: clip;
+    }
+    .culture-section__code {
+      width: 100%;
+      max-width: 100%;
+      font-size: clamp(52px, 16.2vw, 72px);
+      line-height: .86;
+      letter-spacing: -.055em;
+      transform: none;
+    }
+    .culture-section__line {
+      max-width: 100%;
+      transform-origin: left center;
+    }
+    .culture-section__line--one {
+      margin-left: 0;
+      font-size: clamp(42px, 12.6vw, 56px);
+      letter-spacing: -.05em;
+    }
+    .culture-section__live { margin-left: .08em; }
+    .culture-section__line--two {
+      margin-left: 0;
+      font-size: clamp(48px, 14.4vw, 64px);
+      transform: translateX(9vw);
+    }
+    .culture-section__line--three {
+      margin-left: 0;
+      font-size: clamp(56px, 17vw, 78px);
+      transform: translateX(24vw);
+    }
+    .culture-section__code::after {
+      bottom: -56px;
+      font-size: clamp(36px, 11vw, 48px);
+      letter-spacing: .02em;
+    }
+    .culture-section h2 {
+      max-width: 100%;
+      font-size: clamp(39px, 11.7vw, 54px);
+      line-height: .9;
+      letter-spacing: -.055em;
+    }
+    .culture-section h2 em {
+      display: inline-block;
+      font-size: .88em;
+      letter-spacing: -.065em;
+      white-space: nowrap;
+    }
+    .culture-section > div > p {
+      max-width: 100%;
+      margin-top: 24px;
+      font-size: 14px;
+      line-height: 1.78;
+      overflow-wrap: anywhere;
+    }
     footer { grid-template-columns: 1fr; gap: 22px; padding: 36px 18px; }
     footer p { line-height: 1.6; }
     .demo-modal { padding: 34px 24px 26px; }
