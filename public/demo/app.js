@@ -76,14 +76,14 @@ const feedbackAction = document.querySelector("[data-feedback-action]");
 let toastTimer;
 
 function getEffectivePrice(product) {
-  if (product.pricingMode === "sale" && product.salePrice) return product.salePrice;
-  if (product.pricingMode === "member" && product.memberPrice) return product.memberPrice;
+  if (product.salePrice && product.salePrice > 0) return product.salePrice;
+  if (product.memberPrice && product.memberPrice > 0) return product.memberPrice;
   return product.originalPrice;
 }
 
 function getEffectivePriceLabel(product) {
-  if (product.pricingMode === "sale" && product.salePrice) return "特價";
-  if (product.pricingMode === "member" && product.memberPrice) return "會員價";
+  if (product.salePrice && product.salePrice > 0) return "特價";
+  if (product.memberPrice && product.memberPrice > 0) return "會員價";
   return "";
 }
 

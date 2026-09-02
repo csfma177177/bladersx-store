@@ -112,25 +112,25 @@ function normalizeProductRow(product: ProductRow): ProductRow {
 }
 
 export function getEffectivePriceHkd(
-  product: Pick<ProductRow, "original_price_hkd" | "member_price_hkd" | "sale_price_hkd" | "pricing_mode">,
+  product: Pick<ProductRow, "original_price_hkd" | "member_price_hkd" | "sale_price_hkd">,
 ) {
-  if (product.pricing_mode === "sale" && product.sale_price_hkd && product.sale_price_hkd > 0) {
+  if (product.sale_price_hkd && product.sale_price_hkd > 0) {
     return product.sale_price_hkd;
   }
 
-  if (product.pricing_mode === "member" && product.member_price_hkd && product.member_price_hkd > 0) {
+  if (product.member_price_hkd && product.member_price_hkd > 0) {
     return product.member_price_hkd;
   }
 
   return product.original_price_hkd;
 }
 
-export function getEffectivePriceLabel(product: Pick<ProductRow, "pricing_mode" | "sale_price_hkd" | "member_price_hkd">) {
-  if (product.pricing_mode === "sale" && product.sale_price_hkd && product.sale_price_hkd > 0) {
+export function getEffectivePriceLabel(product: Pick<ProductRow, "sale_price_hkd" | "member_price_hkd">) {
+  if (product.sale_price_hkd && product.sale_price_hkd > 0) {
     return "特價";
   }
 
-  if (product.pricing_mode === "member" && product.member_price_hkd && product.member_price_hkd > 0) {
+  if (product.member_price_hkd && product.member_price_hkd > 0) {
     return "會員價";
   }
 
@@ -250,12 +250,7 @@ export async function updateProductPricing(input: {
   const originalPriceHkd = Math.max(0, input.originalPriceHkd);
   const memberPriceHkd = input.memberPriceHkd && input.memberPriceHkd > 0 ? Math.max(0, input.memberPriceHkd) : null;
   const salePriceHkd = input.salePriceHkd && input.salePriceHkd > 0 ? input.salePriceHkd : null;
-  const effectivePriceHkd =
-    input.pricingMode === "sale" && salePriceHkd
-      ? salePriceHkd
-      : input.pricingMode === "member" && memberPriceHkd
-        ? memberPriceHkd
-        : originalPriceHkd;
+  const effectivePriceHkd = salePriceHkd ?? memberPriceHkd ?? originalPriceHkd;
 
   return supabaseFetch<null>(`/rest/v1/products?sku=eq.${encodeFilter(input.sku)}`, {
     method: "PATCH",
