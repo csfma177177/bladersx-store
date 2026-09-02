@@ -267,11 +267,29 @@
   font-size: 18px;
 }
 
+.orderNumber {
+  margin: 0 0 8px;
+  color: #65d8ff;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
 .orderMeta,
 .orderItems {
   color: rgba(238, 244, 255, 0.68);
   line-height: 1.65;
   font-size: 14px;
+}
+
+.orderCompactFooter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(138, 168, 255, 0.1);
 }
 
 .statusPills {
@@ -289,6 +307,179 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.detailsButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(90, 215, 255, 0.38);
+  color: #dff9ff;
+  background: rgba(90, 215, 255, 0.08);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.orderModal {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 160ms ease, visibility 160ms ease;
+}
+
+.orderModal:target {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.modalBackdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(90, 215, 255, 0.18), transparent 34%),
+    radial-gradient(circle at 86% 12%, rgba(164, 97, 255, 0.18), transparent 32%),
+    rgba(2, 5, 13, 0.78);
+  backdrop-filter: blur(12px);
+}
+
+.orderModalPanel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 880px);
+  max-height: min(88vh, 980px);
+  overflow: auto;
+  padding: clamp(22px, 4vw, 34px);
+  border-radius: 28px;
+  border: 1px solid rgba(138, 168, 255, 0.2);
+  background:
+    linear-gradient(145deg, rgba(12, 18, 36, 0.98), rgba(5, 8, 20, 0.98)),
+    #080c18;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: clamp(28px, 5vw, 46px);
+  line-height: 1;
+}
+
+.modalClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  border: 1px solid rgba(138, 168, 255, 0.22);
+  color: #eef4ff;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 30px;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.modalStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.modalStats div {
+  padding: 15px;
+  border-radius: 18px;
+  background: rgba(6, 10, 22, 0.86);
+  border: 1px solid rgba(138, 168, 255, 0.12);
+}
+
+.modalStats span,
+.detailGrid h4 {
+  display: block;
+  margin: 0 0 8px;
+  color: rgba(238, 244, 255, 0.52);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.modalStats strong {
+  font-size: 18px;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.detailGrid section,
+.orderUpdateForm {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(6, 10, 22, 0.72);
+  border: 1px solid rgba(138, 168, 255, 0.12);
+}
+
+.detailGrid p {
+  margin: 0 0 8px;
+  color: rgba(238, 244, 255, 0.74);
+  line-height: 1.55;
+}
+
+.itemList {
+  display: grid;
+  gap: 10px;
+}
+
+.itemRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(138, 168, 255, 0.1);
+}
+
+.itemRow:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.itemRow div {
+  display: grid;
+  gap: 4px;
+}
+
+.itemRow span {
+  color: rgba(238, 244, 255, 0.56);
+  font-size: 13px;
+}
+
+.orderUpdateForm {
+  display: grid;
+  gap: 12px;
 }
 
 .empty {
@@ -327,6 +518,11 @@
   .variantGrid {
     grid-template-columns: 1fr;
   }
+
+  .modalStats,
+  .detailGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
@@ -344,5 +540,19 @@
 
   .pricingPanel {
     grid-template-columns: 1fr;
+  }
+
+  .orderTop,
+  .orderCompactFooter,
+  .itemRow {
+    grid-template-columns: 1fr;
+  }
+
+  .orderTop {
+    display: grid;
+  }
+
+  .orderModal {
+    padding: 14px;
   }
 }

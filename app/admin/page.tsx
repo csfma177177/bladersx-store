@@ -21,6 +21,15 @@ type InventoryItem = {
   updated_at?: string | null;
 };
 
+type DisplayOrderItem = {
+  productName: string;
+  sku: string;
+  colour: string;
+  size: string;
+  quantity: number;
+  unitPriceHkd: number | null;
+};
+
 function money(value: number | null) {
   if (value == null) return "—";
   return `HK$${(value / 100).toLocaleString("en-HK")}`;
@@ -34,17 +43,47 @@ function formatDate(value: string | null) {
   }).format(new Date(value));
 }
 
-function orderItemsLabel(items: unknown) {
-  if (!Array.isArray(items) || items.length === 0) return "未有商品資料";
+function orderNumber(index: number) {
+  return `ORDER ${String(index + 1).padStart(3, "0")}`;
+}
+
+function parseOrderItems(items: unknown): DisplayOrderItem[] {
+  if (!Array.isArray(items) || items.length === 0) return [];
 
   return items
     .map((item) => {
       if (!item || typeof item !== "object") return null;
-      const entry = item as { product_name?: string; sku?: string; size?: string; quantity?: number };
-      return `${entry.product_name ?? entry.sku ?? "ITEM"} / ${entry.size ?? "?"} × ${entry.quantity ?? 1}`;
+      const entry = item as {
+        product_name?: string;
+        sku?: string;
+        colour?: string;
+        size?: string;
+        quantity?: number;
+        unit_price_hkd?: number;
+      };
+      return {
+        productName: entry.product_name ?? entry.sku ?? "ITEM",
+        sku: entry.sku ?? "—",
+        colour: entry.colour ?? "—",
+        size: entry.size ?? "?",
+        quantity: entry.quantity ?? 1,
+        unitPriceHkd: typeof entry.unit_price_hkd === "number" ? entry.unit_price_hkd : null,
+      };
     })
-    .filter(Boolean)
+    .filter((item): item is DisplayOrderItem => Boolean(item));
+}
+
+function orderItemsLabel(items: unknown) {
+  const parsed = parseOrderItems(items);
+  if (parsed.length === 0) return "未有商品資料";
+
+  return parsed
+    .map((item) => `${item.productName} / ${item.size} × ${item.quantity}`)
     .join(" · ");
+}
+
+function orderItemCount(items: unknown) {
+  return parseOrderItems(items).reduce((sum, item) => sum + item.quantity, 0);
 }
 
 function groupVariants(sku: string, variants: InventoryItem[]) {
@@ -331,70 +370,148 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             {orders.length === 0 ? (
               <div className={styles.empty}>暫時未有訂單。</div>
             ) : (
-              <div className={styles.orders}>
-                {orders.map((order) => (
-                  <article key={order.id} className={styles.orderCard}>
-                    <div className={styles.orderTop}>
-                      <div>
-                        <h3 className={styles.orderTitle}>
-                          {order.customer_name || "未填姓名"} · {money(order.amount_total)}
-                        </h3>
-                        <div className={styles.orderMeta}>
-                          {order.customer_email || "未有 email"} · {order.customer_phone || "未有電話"} · 建立於 {formatDate(order.created_at)}
-                          {order.paid_at ? ` · 付款於 ${formatDate(order.paid_at)}` : ""}
+              <div className={styles.orders} id="orders">
+                {orders.map((order, index) => {
+                  const modalId = `order-${order.id}`;
+                  const parsedItems = parseOrderItems(order.items);
+                  return (
+                    <article key={order.id} className={styles.orderCard}>
+                      <div className={styles.orderTop}>
+                        <div>
+                          <p className={styles.orderNumber}>{orderNumber(index)}</p>
+                          <h3 className={styles.orderTitle}>
+                            {order.customer_name || "未填姓名"} · {money(order.amount_total)}
+                          </h3>
+                          <div className={styles.orderMeta}>
+                            {order.customer_phone || "未有電話"} · {orderItemCount(order.items)} 件貨 · 建立於 {formatDate(order.created_at)}
+                          </div>
+                        </div>
+
+                        <div className={styles.statusPills}>
+                          <span className={styles.pill}>{paymentStatusLabel(order.status)}</span>
+                          <span className={styles.pill}>{fulfillmentStatusLabel(order.fulfillment_status)}</span>
                         </div>
                       </div>
 
-                      <div className={styles.statusPills}>
-                        <span className={styles.pill}>{paymentStatusLabel(order.status)}</span>
-                        <span className={styles.pill}>{fulfillmentStatusLabel(order.fulfillment_status)}</span>
+                      <div className={styles.orderCompactFooter}>
+                        <span className={styles.orderItems}>{orderItemsLabel(order.items)}</span>
+                        <a className={styles.detailsButton} href={`#${modalId}`}>
+                          View details
+                        </a>
                       </div>
-                    </div>
 
-                    <div className={styles.orderItems}>{orderItemsLabel(order.items)}</div>
+                      <section className={styles.orderModal} id={modalId} aria-labelledby={`${modalId}-title`}>
+                        <a className={styles.modalBackdrop} href="#orders" aria-label="關閉訂單詳情" />
+                        <article className={styles.orderModalPanel} role="dialog" aria-modal="true">
+                          <div className={styles.modalHeader}>
+                            <div>
+                              <p className={styles.orderNumber}>{orderNumber(index)}</p>
+                              <h3 className={styles.modalTitle} id={`${modalId}-title`}>
+                                {order.customer_name || "未填姓名"}
+                              </h3>
+                              <p className={styles.orderMeta}>
+                                {order.client_reference_id} · {formatDate(order.created_at)}
+                              </p>
+                            </div>
 
-                    <form className={styles.variantForm} action="/api/admin/orders" method="post">
-                      <input type="hidden" name="id" value={order.id} />
+                            <a className={styles.modalClose} href="#orders" aria-label="關閉">
+                              ×
+                            </a>
+                          </div>
 
-                      <label className={styles.field}>
-                        Fulfillment 狀態
-                        <select
-                          className={styles.select}
-                          name="fulfillmentStatus"
-                          defaultValue={order.fulfillment_status || "pending"}
-                        >
-                          <option value="pending">pending</option>
-                          <option value="processing">processing</option>
-                          <option value="shipped">shipped</option>
-                          <option value="completed">completed</option>
-                        </select>
-                      </label>
+                          <div className={styles.modalStats}>
+                            <div>
+                              <span>ORDER TOTAL</span>
+                              <strong>{money(order.amount_total)}</strong>
+                            </div>
+                            <div>
+                              <span>PAYMENT</span>
+                              <strong>{paymentStatusLabel(order.status)}</strong>
+                            </div>
+                            <div>
+                              <span>FULFILLMENT</span>
+                              <strong>{fulfillmentStatusLabel(order.fulfillment_status)}</strong>
+                            </div>
+                          </div>
 
-                      {order.status !== "paid" ? (
-                        <label className={styles.checkboxRow}>
-                          <input type="checkbox" name="markPaid" value="true" />
-                          已收到付款，提交後標記為「已付款」
-                        </label>
-                      ) : (
-                        <div className={styles.orderNote}>此訂單已付款；再次儲存只會更新備註同 fulfillment 狀態。</div>
-                      )}
+                          <div className={styles.detailGrid}>
+                            <section>
+                              <h4>客人資料</h4>
+                              <p>{order.customer_email || "未有 email"}</p>
+                              <p>{order.customer_phone || "未有電話"}</p>
+                              {order.paid_at && <p>付款時間：{formatDate(order.paid_at)}</p>}
+                            </section>
 
-                      <label className={styles.field}>
-                        Admin 備註
-                        <textarea
-                          className={styles.textarea}
-                          name="adminNotes"
-                          defaultValue={order.admin_notes ?? ""}
-                          placeholder="例如：已 WhatsApp 聯絡、等補貨、已安排交收"
-                        />
-                      </label>
+                            <section>
+                              <h4>商品明細</h4>
+                              {parsedItems.length === 0 ? (
+                                <p>未有商品資料</p>
+                              ) : (
+                                <div className={styles.itemList}>
+                                  {parsedItems.map((item, itemIndex) => (
+                                    <div className={styles.itemRow} key={`${order.id}-${item.sku}-${item.size}-${itemIndex}`}>
+                                      <div>
+                                        <strong>{item.productName}</strong>
+                                        <span>
+                                          {item.colour} · SIZE {item.size} · SKU {item.sku}
+                                        </span>
+                                      </div>
+                                      <div>
+                                        <strong>× {item.quantity}</strong>
+                                        <span>{item.unitPriceHkd ? money(item.unitPriceHkd * 100) : "—"} / 件</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </section>
+                          </div>
 
-                      <button className={styles.save} type="submit">
-                        更新訂單
-                      </button>
-                    </form>
-                  </article>
-                ))}
+                          <form className={styles.orderUpdateForm} action="/api/admin/orders" method="post">
+                            <input type="hidden" name="id" value={order.id} />
+
+                            <label className={styles.field}>
+                              Fulfillment 狀態
+                              <select
+                                className={styles.select}
+                                name="fulfillmentStatus"
+                                defaultValue={order.fulfillment_status || "pending"}
+                              >
+                                <option value="pending">pending</option>
+                                <option value="processing">processing</option>
+                                <option value="shipped">shipped</option>
+                                <option value="completed">completed</option>
+                              </select>
+                            </label>
+
+                            {order.status !== "paid" ? (
+                              <label className={styles.checkboxRow}>
+                                <input type="checkbox" name="markPaid" value="true" />
+                                已收到付款，提交後標記為「已付款」
+                              </label>
+                            ) : (
+                              <div className={styles.orderNote}>此訂單已付款；再次儲存只會更新備註同 fulfillment 狀態。</div>
+                            )}
+
+                            <label className={styles.field}>
+                              Admin 備註
+                              <textarea
+                                className={styles.textarea}
+                                name="adminNotes"
+                                defaultValue={order.admin_notes ?? ""}
+                                placeholder="例如：已 WhatsApp 聯絡、等補貨、已安排交收"
+                              />
+                            </label>
+
+                            <button className={styles.save} type="submit">
+                              更新訂單
+                            </button>
+                          </form>
+                        </article>
+                      </section>
+                    </article>
+                  );
+                })}
               </div>
             )}
           </article>

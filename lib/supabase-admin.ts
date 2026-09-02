@@ -170,7 +170,11 @@ async function supabaseFetch<T>(path: string, init: RequestInit = {}) {
   }
 
   if (response.status === 204) return null as T;
-  return response.json() as Promise<T>;
+
+  const responseText = await response.text();
+  if (!responseText) return null as T;
+
+  return JSON.parse(responseText) as T;
 }
 
 export async function listProducts() {

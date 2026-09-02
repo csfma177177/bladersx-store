@@ -151,6 +151,16 @@ function setFeedbackModal({ icon = "OK", kicker, title, copy, action = "BACK TO 
   feedbackAction.textContent = action;
 }
 
+function showFeedbackModal(config, sourceModal = null) {
+  setFeedbackModal(config);
+
+  if (sourceModal) sourceModal.classList.remove("is-open");
+  modal.classList.add("is-open");
+  modalOverlay.classList.add("is-open");
+  lockPage(true);
+  modal.querySelector("[data-close-modal]").focus();
+}
+
 function persistCart() {
   localStorage.setItem("bx-cart", JSON.stringify(state.cart));
   renderCart();
@@ -365,25 +375,22 @@ async function submitOrder(event) {
     state.cart = [];
     persistCart();
     orderForm.reset();
-    closeModal(orderModal);
 
-    setFeedbackModal({
+    showFeedbackModal({
       icon: "OK",
       kicker: "ORDER CONFIRMED",
       title: "ORDER<br />RECEIVED.",
       copy: `我哋已收到你嘅訂單 ${data?.orderReference ? `（${data.orderReference}）` : ""}。團隊會根據你填寫嘅資料再聯絡你安排付款同確認。`,
       action: "BACK TO STORE",
-    });
-    openModal(modal);
+    }, orderModal);
   } catch (error) {
-    setFeedbackModal({
+    showFeedbackModal({
       icon: "!",
       kicker: "ORDER ISSUE",
       title: "ORDER<br />NOT SENT.",
       copy: error instanceof Error ? error.message : "未能確認訂單，請稍後再試。",
       action: "TRY AGAIN",
-    });
-    openModal(modal);
+    }, orderModal);
   } finally {
     button.disabled = false;
     button.innerHTML = previous;
