@@ -188,10 +188,13 @@ function showOrderSuccess(reference) {
   if (orderReference) orderReference.textContent = reference || "BX-ORDER";
   if (orderEntry) orderEntry.hidden = true;
   if (orderSuccess) orderSuccess.hidden = false;
-  orderModal.classList.add("is-open");
-  modalOverlay.classList.add("is-open");
-  lockPage(true);
-  orderSuccess?.querySelector("[data-close-modal]")?.focus();
+  showFeedbackModal({
+    icon: "OK",
+    kicker: "ORDER CONFIRMED",
+    title: "ORDER<br />RECEIVED",
+    copy: `我哋已經收到你嘅訂單${reference ? `（${reference}）` : ""}。團隊會根據你填寫嘅資料，再個別 WhatsApp 你安排付款同確認。`,
+    action: "BACK TO STORE",
+  }, orderModal);
   showToast("訂單已收到，我哋會盡快 WhatsApp 你");
 }
 

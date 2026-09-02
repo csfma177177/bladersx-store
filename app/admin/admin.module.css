@@ -449,6 +449,36 @@
   line-height: 1.55;
 }
 
+.customerEmailRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.customerEmailRow p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.confirmEmailButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 13px;
+  border: 1px solid rgba(90, 215, 255, 0.42);
+  border-radius: 999px;
+  background: rgba(90, 215, 255, 0.1);
+  color: #dff9ff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
 .itemList {
   display: grid;
   gap: 10px;

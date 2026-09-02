@@ -100,6 +100,10 @@ function getBanner(status: string | undefined) {
   if (status === "order-deleted") return "訂單已刪除。";
   if (status === "delete-not-confirmed") return "刪除訂單前要先 tick 確認。";
   if (status === "pricing-saved") return "產品定價已更新。";
+  if (status === "customer-email-sent") return "確認訂單 email 已發送俾客人。";
+  if (status === "customer-email-missing") return "呢張訂單未有客人 email，未能發送確認訂單。";
+  if (status === "customer-email-failed") return "確認訂單 email 發送失敗，請檢查 email 設定或稍後再試。";
+  if (status === "email-not-configured") return "未設定 RESEND_API_KEY，暫時未能發送 email。";
   return null;
 }
 
@@ -439,7 +443,18 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                           <div className={styles.detailGrid}>
                             <section>
                               <h4>客人資料</h4>
-                              <p>{order.customer_email || "未有 email"}</p>
+                              <div className={styles.customerEmailRow}>
+                                <p>{order.customer_email || "未有 email"}</p>
+                                {order.customer_email ? (
+                                  <form action="/api/admin/orders" method="post">
+                                    <input type="hidden" name="id" value={order.id} />
+                                    <input type="hidden" name="intent" value="confirm-customer" />
+                                    <button className={styles.confirmEmailButton} type="submit">
+                                      確認訂單
+                                    </button>
+                                  </form>
+                                ) : null}
+                              </div>
                               <p>{order.customer_phone || "未有電話"}</p>
                               {order.paid_at && <p>付款時間：{formatDate(order.paid_at)}</p>}
                             </section>

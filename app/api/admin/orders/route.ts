@@ -1,10 +1,38 @@
 import { NextResponse } from "next/server";
 import { hasAdminSession } from "@/lib/admin-auth";
 import { applyPaidOrderInventory, deleteOrderById, getOrderById, updateOrderAdmin } from "@/lib/supabase-admin";
+import { sendCustomerOrderConfirmation, type OrderNotificationItem } from "@/lib/order-notifications";
 
 export const runtime = "nodejs";
 
 const allowedFulfillmentStatuses = new Set(["pending", "processing", "shipped", "completed"]);
+
+function normaliseNotificationItems(items: unknown): OrderNotificationItem[] {
+  if (!Array.isArray(items)) return [];
+
+  return items
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const entry = item as {
+        sku?: string;
+        size?: string;
+        quantity?: number;
+        product_name?: string;
+        colour?: string;
+        unit_price_hkd?: number;
+      };
+
+      return {
+        sku: entry.sku ?? "—",
+        size: entry.size ?? "—",
+        quantity: typeof entry.quantity === "number" && entry.quantity > 0 ? entry.quantity : 1,
+        product_name: entry.product_name ?? entry.sku ?? "ITEM",
+        colour: entry.colour ?? "—",
+        unit_price_hkd: typeof entry.unit_price_hkd === "number" ? entry.unit_price_hkd : 0,
+      };
+    })
+    .filter((item): item is OrderNotificationItem => Boolean(item));
+}
 
 export async function POST(request: Request) {
   const url = new URL(request.url);
@@ -32,6 +60,35 @@ export async function POST(request: Request) {
 
     await deleteOrderById(id);
     return NextResponse.redirect(new URL("/admin?status=order-deleted", url.origin), { status: 303 });
+  }
+
+  if (intent === "confirm-customer") {
+    const customerEmail = existingOrder.customer_email?.trim();
+    if (!customerEmail) {
+      return NextResponse.redirect(new URL("/admin?status=customer-email-missing", url.origin), { status: 303 });
+    }
+
+    try {
+      const result = await sendCustomerOrderConfirmation({
+        orderReference: existingOrder.client_reference_id,
+        customer: {
+          name: existingOrder.customer_name || "Blader",
+          email: customerEmail,
+          phone: existingOrder.customer_phone,
+        },
+        items: normaliseNotificationItems(existingOrder.items),
+        amountTotal: existingOrder.amount_total ?? 0,
+      });
+
+      if (result.skipped) {
+        return NextResponse.redirect(new URL("/admin?status=email-not-configured", url.origin), { status: 303 });
+      }
+    } catch (error) {
+      console.error(error);
+      return NextResponse.redirect(new URL("/admin?status=customer-email-failed", url.origin), { status: 303 });
+    }
+
+    return NextResponse.redirect(new URL("/admin?status=customer-email-sent", url.origin), { status: 303 });
   }
 
   const nextPaymentStatus = markPaid ? "paid" : existingOrder.status;
