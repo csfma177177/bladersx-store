@@ -505,6 +505,7 @@
   .demo-modal--size-chart .size-chart-table tbody tr:hover td,
   .demo-modal--size-chart .size-chart-table tbody tr:hover th { background: rgba(86,220,255,.05); }
   .demo-modal--size-chart .size-chart-note { margin-top: 16px; color: #8fdfff; }
+  .size-card-grid { display: none; }
   .demo-modal--size-chart .size-diagram-card h3 { display: flex; align-items: center; gap: 10px; }
   .demo-modal--size-chart .size-diagram-card h3::before { content: ""; width: 18px; height: 2px; background: linear-gradient(90deg, var(--cyan), var(--violet)); }
   .demo-modal--size-chart .button { margin-top: 24px; }
@@ -654,12 +655,91 @@
     footer p { line-height: 1.6; }
     .demo-modal { padding: 34px 24px 26px; }
     .demo-modal h2 { font-size: 46px; }
-    .demo-modal--size-chart { width: calc(100% - 16px); max-height: calc(100vh - 16px); padding: 24px 14px 18px; }
-    .size-chart-hero { flex-direction: column; align-items: flex-start; }
-    .size-chart-pills { justify-content: flex-start; }
-    .size-chart-pills span { min-height: 28px; padding: 0 10px; }
-    .size-chart-grid--modal { grid-template-columns: 1fr; gap: 16px; margin-top: 18px; }
+    .demo-modal--size-chart {
+      top: max(8px, env(safe-area-inset-top));
+      right: 8px;
+      bottom: max(8px, env(safe-area-inset-bottom));
+      left: 8px;
+      width: auto;
+      max-height: none;
+      padding: 16px 12px 18px;
+      transform: translateY(10px) scale(.98);
+      border-width: 1px;
+    }
+    .demo-modal--size-chart.is-open { transform: none; }
+    .demo-modal--size-chart::after { inset: 7px; }
+    .demo-modal--size-chart .demo-modal__close {
+      top: 10px;
+      right: 10px;
+      z-index: 4;
+      width: 44px;
+      height: 44px;
+      background: rgba(8,11,21,.9);
+    }
+    .size-chart-hero { flex-direction: column; align-items: flex-start; gap: 12px; padding-right: 52px; }
+    .size-chart-kicker { font-size: 8px; letter-spacing: .18em; }
+    .size-chart-pills { justify-content: flex-start; gap: 7px; }
+    .size-chart-pills span { min-height: 28px; padding: 0 9px; font-size: 7px; letter-spacing: .12em; }
+    .demo-modal--size-chart h2 { margin-top: 14px; font-size: clamp(44px, 16vw, 58px); }
+    .demo-modal--size-chart .demo-modal__copy { margin: 14px 0 18px; font-size: 11px; line-height: 1.7; }
+    .size-chart-grid--modal { grid-template-columns: 1fr; gap: 14px; margin-top: 14px; }
+    .demo-modal--size-chart .size-chart-table-wrap { padding: 12px; }
+    .demo-modal--size-chart .size-chart-meta { margin-bottom: 12px; padding: 0; }
+    .demo-modal--size-chart .size-chart-scroll { display: none; }
+    .size-card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .size-card-grid article {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(164,180,218,.18);
+      background: linear-gradient(155deg, rgba(255,255,255,.055), rgba(86,220,255,.035));
+      padding: 12px 10px 10px;
+    }
+    .size-card-grid article::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 2px;
+      background: linear-gradient(90deg, var(--cyan), var(--violet));
+      opacity: .9;
+    }
+    .size-card-grid strong {
+      display: block;
+      color: var(--ink);
+      font: 900 22px/1 var(--font-wide);
+      letter-spacing: .04em;
+    }
+    .size-card-grid dl {
+      display: grid;
+      gap: 7px;
+      margin-top: 12px;
+    }
+    .size-card-grid dl div {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: #cfd6e8;
+      font-weight: 900;
+    }
+    .size-card-grid dt {
+      color: var(--cyan);
+      font-size: 10px;
+      letter-spacing: .18em;
+    }
+    .size-card-grid dd {
+      margin: 0;
+      color: var(--ink);
+      font: 900 18px/1 var(--font-wide);
+    }
+    .demo-modal--size-chart .size-chart-note { margin-top: 12px; font-size: 9px; line-height: 1.55; }
     .demo-modal--size-chart .size-chart-visuals { grid-template-columns: 1fr; }
+    .demo-modal--size-chart .size-diagram-card { padding: 12px; }
+    .demo-modal--size-chart .size-diagram-card h3 { font-size: 24px; }
+    .demo-modal--size-chart .button { min-height: 48px; margin-top: 14px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
