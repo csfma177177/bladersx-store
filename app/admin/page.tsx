@@ -87,7 +87,7 @@ function orderItemCount(items: unknown) {
 }
 
 function groupVariants(sku: string, variants: InventoryItem[]) {
-  const order = ["S", "M", "L", "XL", "2XL", "3XL"];
+  const order = ["XXS", "XS", "S", "M", "L", "XL", "2XL", "3XL"];
   return variants
     .filter((variant) => variant.sku === sku)
     .sort((a, b) => order.indexOf(a.size) - order.indexOf(b.size));

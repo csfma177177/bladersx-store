@@ -36,7 +36,7 @@ create table if not exists public.orders (
 
 create table if not exists public.product_variants (
   sku text not null references public.products (sku) on delete cascade,
-  size text not null check (size in ('S', 'M', 'L', 'XL', '2XL', '3XL')),
+  size text not null check (size in ('XXS', 'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL')),
   stock_quantity integer not null default 0 check (stock_quantity >= 0),
   active boolean not null default true,
   created_at timestamptz not null default now(),
@@ -121,7 +121,7 @@ alter table public.product_variants
 
 alter table public.product_variants
   add constraint product_variants_size_check
-  check (size in ('S', 'M', 'L', 'XL', '2XL', '3XL'));
+  check (size in ('XXS', 'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'));
 
 insert into public.products (sku, name, colour, price_hkd, original_price_hkd, member_price_hkd, sale_price_hkd, pricing_mode)
 values
@@ -135,7 +135,7 @@ on conflict (sku) do update set
 insert into public.product_variants (sku, size, stock_quantity, active)
 select products.sku, sizes.size, 0, true
 from public.products as products
-cross join (values ('S'), ('M'), ('L'), ('XL'), ('2XL'), ('3XL')) as sizes(size)
+cross join (values ('XXS'), ('XS'), ('S'), ('M'), ('L'), ('XL'), ('2XL'), ('3XL')) as sizes(size)
 on conflict (sku, size) do nothing;
 
 create index if not exists orders_status_idx on public.orders (status);

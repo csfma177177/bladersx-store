@@ -104,11 +104,11 @@ function inventoryItemsFromMetadata(metadata: Record<string, string> | undefined
 
       return {
         sku,
-        size: size as "S" | "M" | "L" | "XL" | "2XL" | "3XL",
+        size: size as "XXS" | "XS" | "S" | "M" | "L" | "XL" | "2XL" | "3XL",
         quantity,
       };
     })
-    .filter((item): item is { sku: "BX-MUT-01" | "BX-MUT-02"; size: "S" | "M" | "L" | "XL" | "2XL" | "3XL"; quantity: number } => Boolean(item));
+    .filter((item): item is { sku: "BX-MUT-01" | "BX-MUT-02"; size: "XXS" | "XS" | "S" | "M" | "L" | "XL" | "2XL" | "3XL"; quantity: number } => Boolean(item));
 }
 
 export async function POST(request: Request) {

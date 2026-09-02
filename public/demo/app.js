@@ -39,7 +39,7 @@ const PRODUCTS = {
   },
 };
 
-const AVAILABLE_SIZES = ["S", "M", "L", "XL", "2XL", "3XL"];
+const AVAILABLE_SIZES = ["XXS", "XS", "S", "M", "L", "XL", "2XL", "3XL"];
 
 const state = {
   cart: JSON.parse(localStorage.getItem("bx-cart") || "[]"),
